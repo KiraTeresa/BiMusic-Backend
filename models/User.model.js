@@ -1,6 +1,4 @@
 const { Schema, model } = require("mongoose");
-const Project = require('./Project.model');
-const Sample = require('./Sample.model')
 
 const userSchema = new Schema(
   {
@@ -55,19 +53,19 @@ const userSchema = new Schema(
     collabProjects: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref:Project
+        ref:"Project"
       }]
     },
     ownProjects: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref:Project
+        ref:"Project"
       }]
     },
     samples: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref: Sample
+        ref: "Sample"
       }]
     },
 },

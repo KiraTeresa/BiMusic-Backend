@@ -1,6 +1,4 @@
 const { Schema, model } = require("mongoose");
-const User = require('./User.model');
-const Feedback = require('./Feedback.model');
 
 const sampleSchema = new Schema(
   {
@@ -18,7 +16,7 @@ const sampleSchema = new Schema(
     },
     artist: {
         type: Schema.Types.ObjectId,
-        ref:User,
+        ref:"User",
         required: true,
       },
    description: {
@@ -35,7 +33,7 @@ const sampleSchema = new Schema(
     feedback: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref:Feedback,
+        ref:"Feedback",
         required: true,
       }]
     },
