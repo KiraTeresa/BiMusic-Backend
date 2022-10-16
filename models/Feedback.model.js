@@ -25,6 +25,9 @@ const feedbackSchema = new Schema(
             ref: Sample,
             required: true
         }
+    },
+    {
+      timestamps: true,
     }
 )
 

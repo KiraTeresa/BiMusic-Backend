@@ -10,8 +10,8 @@ const commentSchema = new Schema(
             max: 100
         },
         author: {
-            type: Schema.Types.ObjectId,
-            ref: User,
+            // type: Schema.Types.ObjectId,
+            // ref: User,
             required: true
         },
         project: {
@@ -19,6 +19,9 @@ const commentSchema = new Schema(
             ref: Project,
             required: true
         }
+    },
+    {
+      timestamps: true,
     }
 )
 
