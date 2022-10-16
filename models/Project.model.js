@@ -1,5 +1,6 @@
 const {Schema, model} = require ('mongoose');
 const User = require('./User.model');
+const Comment = require('./Comment.model')
 
 const projectSchema = new Schema(
     {
@@ -18,12 +19,13 @@ const projectSchema = new Schema(
             max: 1000,
             required: [true, "Long description is required."]
         },
-        genre: Array,
-        lookingFor: {
+        genre: {
             type: [{
-            num: Number,
-            skill: String
-            }],
+              type: String
+          }],
+          },
+        lookingFor: {
+            type: Array,
             required: [true, "Please choose at least one option."]
             },
         startDate: Date,
@@ -36,18 +38,21 @@ const projectSchema = new Schema(
             ref: User,
             required: true
         },
-        collaborators: [
-           {type: Schema.Types.ObjectId,
-            ref: User}
-        ],
-        pendingCollabs: [
-            {type: Schema.Types.ObjectId,
-             ref: User}
-         ],
-         comments: {
-            type: Schema.Types.ObjectId,
-            ref: Comment
-         },
+        collaborators:{
+            type: [{
+                type: Schema.Types.ObjectId,
+                ref: User}]
+        },
+        pendingCollabs: {
+            type: [{
+                type: Schema.Types.ObjectId,
+                ref: User}]
+        },
+         comments:{
+            type: [{
+                type: Schema.Types.ObjectId,
+                ref: Comment}]
+        },
          sample: {
             type: Schema.Types.ObjectId,
             ref: Sample

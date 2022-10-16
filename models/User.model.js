@@ -1,6 +1,7 @@
 const { Schema, model } = require("mongoose");
+const Project = require('./Project.model');
+const Sample = require('./Sample.model')
 
-// TODO: Please make sure you edit the User model to whatever makes sense in this case
 const userSchema = new Schema(
   {
     email: {
@@ -20,6 +21,7 @@ const userSchema = new Schema(
       required: [true, "Username is required."],
       min: 5,
       max: 20,
+      lowercase: true,
     },
     firstName: {
       type: String,
@@ -51,16 +53,25 @@ const userSchema = new Schema(
       type: String,
     },
     collabProjects: {
-      type: Schema.Types.ObjectId,
-      ref:Project
+      type: [{
+        type: Schema.Types.ObjectId,
+        ref:Project
+      }]
     },
     ownProjects: {
-      type: Schema.Types.ObjectId,
-      ref:Projects
+      type: [{
+        type: Schema.Types.ObjectId,
+        ref:Project
+      }]
+    },
+    samples: {
+      type: [{
+        type: Schema.Types.ObjectId,
+        ref: Sample
+      }]
     },
 },
   {
-    // this second object adds extra properties: `createdAt` and `updatedAt`
     timestamps: true,
   }
 );
