@@ -28,28 +28,28 @@ const projectSchema = new Schema(
             },
         startDate: Date,
         endDate: Date,
-        location: {
-            type: {isRemote: Boolean, city: String, country: String}
-        },
+        isRemote: Boolean,
+        city: String,
+        country: String,
         initiator: {
-            type: ObjectId,
+            type: Schema.Types.ObjectId,
             ref: User,
             required: true
         },
         collaborators: [
-           {type: ObjectId,
+           {type: Schema.Types.ObjectId,
             ref: User}
         ],
         pendingCollabs: [
-            {type: ObjectId,
+            {type: Schema.Types.ObjectId,
              ref: User}
          ],
          comments: {
-            type: ObjectId,
+            type: Schema.Types.ObjectId,
             ref: Comment
          },
          sample: {
-            type: ObjectId,
+            type: Schema.Types.ObjectId,
             ref: Sample
          }
     }
