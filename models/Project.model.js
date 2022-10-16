@@ -1,6 +1,7 @@
 const {Schema, model} = require ('mongoose');
 const User = require('./User.model');
 const Comment = require('./Comment.model')
+const Sample = require('./Sample.model')
 
 const projectSchema = new Schema(
     {
@@ -63,6 +64,6 @@ const projectSchema = new Schema(
     }
 )
 
-const Project = model("Project", projectSchema)
+const Project = model("Project", projectSchema);
 
 module.exports = Project;
