@@ -16,7 +16,7 @@ require("./config")(app);
 
 // 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
-app.use("/api", indexRoutes);
+app.use("/", indexRoutes);
 
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
@@ -25,6 +25,3 @@ app.use("/auth", authRoutes);
 require("./error-handling")(app);
 
 module.exports = app;
-
-
-// Test Backend Nico
