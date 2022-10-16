@@ -1,7 +1,4 @@
 const {Schema, model} = require ('mongoose');
-const User = require('./User.model');
-const Comment = require('./Comment.model')
-const Sample = require('./Sample.model')
 
 const projectSchema = new Schema(
     {
@@ -36,27 +33,27 @@ const projectSchema = new Schema(
         country: {type: String, required: true},
         initiator: {
             type: Schema.Types.ObjectId,
-            ref: User,
+            ref: "User",
             required: true
         },
         collaborators:{
             type: [{
                 type: Schema.Types.ObjectId,
-                ref: User}]
+                ref: "User"}]
         },
         pendingCollabs: {
             type: [{
                 type: Schema.Types.ObjectId,
-                ref: User}]
+                ref: "User"}]
         },
          comments:{
             type: [{
                 type: Schema.Types.ObjectId,
-                ref: Comment}]
+                ref: "Comment"}]
         },
          sample: {
             type: Schema.Types.ObjectId,
-            ref: Sample
+            ref: "Sample"
          }
     },
     {

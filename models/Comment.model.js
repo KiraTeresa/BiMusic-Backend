@@ -1,6 +1,4 @@
 const {Schema, model} = require('mongoose');
-const User = require('./User.model');
-const Project = require('./Project.model')
 
 const commentSchema = new Schema(
     {
@@ -11,12 +9,12 @@ const commentSchema = new Schema(
       },
       author: {
         type: Schema.Types.ObjectId,
-        ref: User,
+        ref: "User",
         required: true,
       },
       project: {
         type: Schema.Types.ObjectId,
-        ref: Project,
+        ref: "Project",
         required: true,
       },
     },

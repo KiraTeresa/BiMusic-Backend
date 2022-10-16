@@ -1,6 +1,4 @@
 const {Schema, model} = require('mongoose');
-const User = require('./User.model');
-const Sample = require('./Sample.model')
 
 const feedbackSchema = new Schema(
     {
@@ -17,12 +15,12 @@ const feedbackSchema = new Schema(
         },
         author: {
             type: Schema.Types.ObjectId,
-            ref: User,
+            ref: "User",
             required: true
         },
         sample: {
             type: Schema.Types.ObjectId,
-            ref: Sample,
+            ref: "Sample",
             required: true
         }
     },
