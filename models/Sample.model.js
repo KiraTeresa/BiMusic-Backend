@@ -1,4 +1,6 @@
 const { Schema, model } = require("mongoose");
+const User = require('./User.model');
+const Feedback = require('./Feedback.model');
 
 const sampleSchema = new Schema(
   {
@@ -17,7 +19,7 @@ const sampleSchema = new Schema(
     artist: {
         type: Schema.Types.ObjectId,
         ref:User,
-        required: [true],
+        required: true,
       },
    description: {
       type: String,
@@ -31,13 +33,15 @@ const sampleSchema = new Schema(
       type: Number,
     },
     feedback: {
+      type: [{
         type: Schema.Types.ObjectId,
         ref:Feedback,
-        required: [true],
-      },
+        required: true,
+      }]
+    },
     public: {
       type: Boolean,
-      required: [true],
+      required: true,
     },
     
 },
