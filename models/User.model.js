@@ -16,30 +16,30 @@ const userSchema = new Schema(
       min: 8,
       required: [true, "Password is required."],
     },
-    username: {
+    name: {
       type: String,
       required: [true, "Username is required."],
       min: 5,
       max: 20,
       lowercase: true,
     },
-    firstName: {
-      type: String,
-      required: [true, "First name is required."],
-    },
-    lastName: {
-      type: String,
-      required: [true, "Last name is required."],
-    },
+    // firstName: {
+    //   type: String,
+    //   required: [true, "First name is required."],
+    // },
+    // lastName: {
+    //   type: String,
+    //   required: [true, "Last name is required."],
+    // },
     aboutMe: {
       type: String,
     },
-    skills: {
-      type: [{
-        type: String
-    }],
-      required: [true, "Skills are required."],
-    },
+    // skills: {
+    //   type: [{
+    //     type: String
+    // }],
+    //   required: [true, "Skills are required."],
+    // },
     avatar: {
       type: String,
     },
@@ -55,13 +55,13 @@ const userSchema = new Schema(
     collabProjects: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref:Project
+        ref:"Project"
       }]
     },
     ownProjects: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref:Project
+        ref:"Project"
       }]
     },
     samples: {
