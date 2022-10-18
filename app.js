@@ -24,6 +24,9 @@ app.use("/auth", authRoutes);
 const profileRoutes = require("./routes/profile.routes");
 app.use("/profile", profileRoutes);
 
+const projectRoutes = require("./routes/projects.routes")
+app.use("/projects", projectRoutes)
+
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require("./error-handling")(app);
 
