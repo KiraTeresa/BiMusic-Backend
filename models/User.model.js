@@ -1,6 +1,4 @@
 const { Schema, model } = require("mongoose");
-const Project = require('./Project.model');
-const Sample = require('./Sample.model')
 
 const userSchema = new Schema(
   {
@@ -67,7 +65,7 @@ const userSchema = new Schema(
     samples: {
       type: [{
         type: Schema.Types.ObjectId,
-        ref: Sample
+        ref: "Sample"
       }]
     },
 },
