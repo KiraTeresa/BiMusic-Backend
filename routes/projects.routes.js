@@ -14,12 +14,12 @@ router.get("/", (req, res) => {
 // })
 
 router.post("/create", async (req, res) => {
-    console.log("REQ: ", req.body)
+    // console.log("REQ: ", req.body)
     const user = mongoose.Types.ObjectId(req.body.initiator)
 
     await Project.create({...req.body, initiator: user}).then((newProject) => {
-        console.log("NEW --> ", newProject)
-        res.json("Added new project to database")
+        // console.log("NEW --> ", newProject)
+        res.json(newProject._id)
     }).catch((err) => console.log("Something went wrong when creating a new project.", err))
 })
 
