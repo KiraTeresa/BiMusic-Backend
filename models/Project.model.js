@@ -29,8 +29,8 @@ const projectSchema = new Schema(
         startDate: Date,
         endDate: Date,
         isRemote: {type: Boolean, required: true},
-        city: {type: String, required: true},
-        country: {type: String, required: true},
+        city: {type: String, default: "n/a"},
+        country: {type: String, default: "n/a"},
         initiator: {
             type: Schema.Types.ObjectId,
             ref: "User",
