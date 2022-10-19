@@ -21,4 +21,11 @@ router.post("/create", async (req, res) => {
     }).catch((err) => console.log("Something went wrong when creating a new project.", err))
 })
 
+router.get('/:projectId', async (req, res) => {
+    console.log("PARAM--> ", req.params)
+    await Project.findById(req.params.projectId).populate("initiator").then((project) => {
+        res.json(project)
+    }).catch((err) => console.log("Fetching the project details failed, ", err))
+})
+
 module.exports = router;
