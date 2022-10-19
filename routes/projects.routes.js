@@ -4,9 +4,7 @@ const Project = require("../models/Project.model")
 const mongoose = require('mongoose')
 
 router.get("/", (req, res) => {
-    Project.find().then((result) =>
-    res.json(result)
-    ).catch(err => console.log("ERROR getting data from db ", err))
+    Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
 })
 
 // router.get("/create", (req, res) => {
