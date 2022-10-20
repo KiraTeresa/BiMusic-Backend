@@ -1,19 +1,30 @@
 const express = require('express')
 const router = express.Router();
 const Project = require("../models/Project.model")
+const User = require('../models/User.model')
 const mongoose = require('mongoose')
 
 router.get("/", (req, res) => {
     Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
 })
 
-// router.get("/create", (req, res) => {
-//     res.json(req.headers)
-// })
+router.get("/create", async (req, res) => {
+    // console.log("LOOOOOOOK", req.headers)
+    const {userId} = req.query
+
+    await User.findById(userId).then((user) => {
+        const {country, city} = user
+        // console.log("UUUUUser--> ", user)
+        // res.json(user)
+        res.json({country, city})
+    }).catch(console.error)
+})
 
 router.post("/create", async (req, res) => {
     // console.log("REQ: ", req.body)
     const user = mongoose.Types.ObjectId(req.body.initiator)
+
+    // TO DO: validation of data?
 
     await Project.create({...req.body, initiator: user}).then((newProject) => {
         // console.log("NEW --> ", newProject)
