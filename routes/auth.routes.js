@@ -18,7 +18,7 @@ const saltRounds = 10;
 
 // POST /auth/signup  - Creates a new user in the database
 router.post("/signup", (req, res, next) => {
-  const { email, password, name, city, country, aboutMe } = req.body;
+  const { email, password, name, city, country, aboutMe, skillArr:skills } = req.body;
 
   // Check if email or password or name are provided as empty strings
   if (email === "" || password === "" || name === "") {
@@ -58,15 +58,15 @@ router.post("/signup", (req, res, next) => {
 
       // Create the new user in the database
       // We return a pending promise, which allows us to chain another `then`
-      return User.create({ email, password: hashedPassword, name, city, country,aboutMe });
+      return User.create({ email, password: hashedPassword, name, city, country,aboutMe,skills });
     })
     .then((createdUser) => {
       // Deconstruct the newly created user object to omit the password
       // We should never expose passwords publicly
-      const { email, name, _id, city, country, aboutMe} = createdUser;
+      const { email, name, _id, city, country, aboutMe, skills} = createdUser;
 
       // Create a new object that doesn't expose the password
-      const user = { email, name, _id, city, country,aboutMe };
+      const user = { email, name, _id, city, country,aboutMe, skills };
 
       // Send a json response containing the user object
       res.status(201).json({ user: user });
@@ -98,10 +98,10 @@ router.post("/login", (req, res, next) => {
 
       if (passwordCorrect) {
         // Deconstruct the user object to omit the password
-        const { _id, email, name, city, country,aboutMe} = foundUser;
+        const { _id, email, name, city, country,aboutMe, skills} = foundUser;
 
         // Create an object that will be set as the token payload
-        const payload = { _id, email, name, city, country,aboutMe };
+        const payload = { _id, email, name, city, country,aboutMe,skills };
 
         // Create a JSON Web Token and sign it
         const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {

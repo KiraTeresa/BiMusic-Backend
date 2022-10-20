@@ -32,12 +32,9 @@ const userSchema = new Schema(
     aboutMe: {
       type: String,
     },
-    // skills: {
-    //   type: [{
-    //     type: String
-    // }],
-    //   required: [true, "Skills are required."],
-    // },
+    skills: {
+      type: Array,
+    },
     avatar: {
       type: String,
     },
