@@ -1,10 +1,39 @@
 const express = require('express')
 const router = express.Router();
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+const Project = require('../models/Project.model');
+const Sample = require('../models/Sample.model');
 
-router.get("/create", (req, res) => {
+router.get("/create", async (req, res) => {
     console.log("REQ SAMPLE CREATE: ", req.query)
-    res.json("Hello from Backend")
+    const {projectId} = req.query
+    if(req.query){
+        await Project.findById(projectId).populate('initiator').then((project)=> res.json(project)).catch(err => console.log(err))}
+
+    else {
+        res.json("Hello from Backend")
+    }
+})
+
+router.post("/create", async (req, res) => {
+    console.log("BODY: ", req.body)
+    const {form, addedToProject} = req.body
+    const user = mongoose.Types.ObjectId(form.artist);
+
+    // TO DO: Validation for valid link
+    // Cloudinary???
+
+    await Sample.create({...form, artist: user}).then(async(newSample)  => {
+         console.log("Created new sample in db: ", newSample)
+         
+             if(addedToProject){
+                 await Project.findByIdAndUpdate(addedToProject, {sample: newSample}, {new: true}).then((updatedProject) => {
+                    console.log("Sample was added to Project: ", updatedProject)
+                 })
+             }
+
+             console.log("Successfully added a sample")
+    }).catch((err) => console.log("Something went wrong when adding a new sample.", err))
 })
 
 module.exports = router;
