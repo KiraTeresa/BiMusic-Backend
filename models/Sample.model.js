@@ -29,6 +29,7 @@ const sampleSchema = new Schema(
     },
     year: {
       type: Number,
+      required: true,
     },
     feedback: {
       type: [{
