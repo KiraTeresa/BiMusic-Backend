@@ -115,4 +115,24 @@ router.post('/:projectId/:userId', async (req, res) => {
     }).catch((err) => console.log("ERR ", err))
 })
 
+// accepting user request
+router.post('/:projectId/:requestingUserId/accept', async (req, res) => {
+    const {projectId, requestingUserId} = req.params;
+
+    // add to collaborator array:
+    await Project.findByIdAndUpdate(projectId, {"$push": {"collaborators": Types.ObjectId(requestingUserId)}}, {"new": true}).then(async () => {
+        
+        // remove from pending list:
+        await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true})}).then(()=> res.json("yeah yeah, user request is taken care of.")).catch((err) => console.log("ErroR: ", err))
+})
+
+// rejecting user request
+router.post('/:projectId/:requestingUserId/reject', async (req, res) => {
+    const {projectId, requestingUserId} = req.params;
+
+    // remove from pending list:
+    await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(() => res.json("Backend took care of the rejection, you got a clean plate")).catch((err) => console.log("ErroR: ", err))
+
+})
+
 module.exports = router;
