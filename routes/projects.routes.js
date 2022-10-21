@@ -68,7 +68,7 @@ router.post("/create", async (req, res) => {
 
 router.get('/:projectId', async (req, res) => {
     console.log("PARAM--> ", req.params)
-    await Project.findById(req.params.projectId).populate("initiator").then((project) => {
+    await Project.findById(req.params.projectId).populate("initiator collaborators pendingCollabs").then((project) => {
         res.json(project)
     }).catch((err) => console.log("Fetching the project details failed, ", err))
 })
@@ -83,7 +83,7 @@ router.post('/:projectId/:userId', async (req, res) => {
         const {initiator, collaborators, pendingCollabs} = project;
 
         // Check if user is initiator:
-        const isInitiator = project._id.equals(userId)
+        const isInitiator = initiator.equals(userId)
         console.log("Initiator? ", isInitiator)
 
         // Check if already collab:
