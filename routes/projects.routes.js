@@ -59,7 +59,7 @@ router.post("/create", async (req, res) => {
     await Project.create({...req.body, initiator: user}).then(async (newProject) => {
         // console.log("NEW --> ", newProject)
 
-        await User.findByIdAndUpdate(user, {$push: {ownProjects: newProject._id}}).then(()=> console.log("Added new project to users ownProject array."))
+        await User.findByIdAndUpdate(user, {$push: {ownProjects: newProject._id}}, {"new": true}).then(()=> console.log("Added new project to users ownProject array."))
 
         res.json(newProject._id)
     }).catch((err) => console.log("Something went wrong when creating a new project.", err))
@@ -70,6 +70,18 @@ router.get('/:projectId', async (req, res) => {
     await Project.findById(req.params.projectId).populate("initiator").then((project) => {
         res.json(project)
     }).catch((err) => console.log("Fetching the project details failed, ", err))
+})
+
+// handle request to join/leave a project:
+router.post('/:projectId/:userId', async (req, res) => {
+    const {projectId, userId} = req.params;
+    console.log("-- TRIGGER --")
+    console.log("PARAM--> ", req.params)
+
+    await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": mongoose.Types.ObjectId(userId)}}, {"new": true}).then((result) => {
+        console.log("NEW--> ", result);
+        res.json(`-- DONE --`)
+    }).catch((err) => console.log("ERR ", err))
 })
 
 module.exports = router;
