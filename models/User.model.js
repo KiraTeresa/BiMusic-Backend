@@ -19,7 +19,6 @@ const userSchema = new Schema(
       required: [true, "Username is required."],
       min: 5,
       max: 20,
-      lowercase: true,
     },
     // firstName: {
     //   type: String,
@@ -32,12 +31,9 @@ const userSchema = new Schema(
     aboutMe: {
       type: String,
     },
-    // skills: {
-    //   type: [{
-    //     type: String
-    // }],
-    //   required: [true, "Skills are required."],
-    // },
+    skills: {
+      type: Array,
+    },
     avatar: {
       type: String,
     },

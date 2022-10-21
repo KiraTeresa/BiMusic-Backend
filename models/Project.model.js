@@ -4,6 +4,7 @@ const projectSchema = new Schema(
     {
         title: {
             type: String,
+            max: 50,
             required: [true, "Title is required."]
         },
         shortDescription: {
@@ -29,8 +30,8 @@ const projectSchema = new Schema(
         startDate: Date,
         endDate: Date,
         isRemote: {type: Boolean, required: true},
-        city: {type: String, required: true},
-        country: {type: String, required: true},
+        city: {type: String},
+        country: {type: String},
         initiator: {
             type: Schema.Types.ObjectId,
             ref: "User",
