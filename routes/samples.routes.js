@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Project = require('../models/Project.model');
 const Sample = require('../models/Sample.model');
+const User = require('../models/User.model')
 
 router.get("/create", async (req, res) => {
     console.log("REQ SAMPLE CREATE: ", req.query)
@@ -61,6 +62,8 @@ router.post("/create", async (req, res) => {
     await Sample.create({...finalForm, artist: user}).then(async(newSample)  => {
          console.log("Created new sample in db: ", newSample)
          
+         await User.findByIdAndUpdate(user, {$push: {samples: newSample._id}}).then(()=> console.log("Added sample to users sample array."))
+
              if(projectId){
                  await Project.findByIdAndUpdate(projectId, {sample: newSample}, {new: true}).then((updatedProject) => {
                     console.log("Sample was added to Project: ", updatedProject)
