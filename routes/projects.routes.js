@@ -2,8 +2,9 @@ const express = require('express')
 const router = express.Router();
 const Project = require("../models/Project.model")
 const User = require('../models/User.model')
-const mongoose = require('mongoose')
-const compareAsc = require('date-fns/compareAsc')
+const { Types } = require('mongoose')
+const compareAsc = require('date-fns/compareAsc');
+const { findByIdAndUpdate } = require('../models/Project.model');
 
 router.get("/", (req, res) => {
     Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
@@ -24,7 +25,7 @@ router.get("/create", async (req, res) => {
 router.post("/create", async (req, res) => {
     console.log("REQ: ", req.body)
     const {title, shortDescription, longDescription, lookingFor, startDate, endDate, isRemote, city, country, initiator } = req.body
-    const user = mongoose.Types.ObjectId(initiator)
+    const user = Types.ObjectId(initiator)
 
     console.log("Start: ", startDate, " End: ", endDate)
 
@@ -78,9 +79,39 @@ router.post('/:projectId/:userId', async (req, res) => {
     console.log("-- TRIGGER --")
     console.log("PARAM--> ", req.params)
 
-    await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": mongoose.Types.ObjectId(userId)}}, {"new": true}).then((result) => {
-        console.log("NEW--> ", result);
-        res.json(`-- DONE --`)
+    await Project.findById(projectId).then(async (project) => {
+        const {initiator, collaborators, pendingCollabs} = project;
+
+        // Check if user is initiator:
+        const isInitiator = project._id.equals(userId)
+        console.log("Initiator? ", isInitiator)
+
+        // Check if already collab:
+        const alreadyCollab = await collaborators.find(async (element) => {
+            console.log("COL-------", element)
+            element.equals(userId)
+        })
+        console.log("Already? ", alreadyCollab)
+        if(alreadyCollab){
+            await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed from collaborators"))
+        }
+
+        // Check if already pending:
+        const alreadyPending = await pendingCollabs.find(async (element) => {
+            console.log("PEN-------", element)
+            element.equals(userId)
+        })
+        console.log("Pending? ", alreadyPending)
+        if(alreadyPending){
+            await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed from pending"))
+        }
+
+        if(!alreadyCollab && !alreadyPending && !isInitiator){
+            await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then((result) => {
+            console.log("NEW--> ", result);
+            res.json(`-- Added user to pending list --`)
+            })
+        }
     }).catch((err) => console.log("ERR ", err))
 })
 
