@@ -10,7 +10,6 @@ router.get("/", (req, res) => {
 })
 
 router.get("/create", async (req, res) => {
-    // console.log("LOOOOOOOK", req.headers)
     const {userId} = req.query
 
     await User.findById(userId).then((user) => {
