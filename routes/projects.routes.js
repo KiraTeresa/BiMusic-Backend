@@ -5,12 +5,14 @@ const User = require('../models/User.model')
 const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const { findByIdAndUpdate } = require('../models/Project.model');
+const isLoggedIn = require('../middleware/isLoggedIn');
+
 
 router.get("/", (req, res) => {
     Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
 })
 
-router.get("/create", async (req, res) => {
+router.get("/create", isLoggedIn,async (req, res) => {
     // console.log("LOOOOOOOK", req.headers)
     const {userId} = req.query
 
@@ -22,7 +24,7 @@ router.get("/create", async (req, res) => {
     }).catch(console.error)
 })
 
-router.post("/create", async (req, res) => {
+router.post("/create", isLoggedIn,async (req, res) => {
     console.log("REQ: ", req.body)
     const {title, shortDescription, longDescription, lookingFor, startDate, endDate, isRemote, city, country, initiator } = req.body
     const user = Types.ObjectId(initiator)
@@ -66,15 +68,16 @@ router.post("/create", async (req, res) => {
     }).catch((err) => console.log("Something went wrong when creating a new project.", err))
 })
 
-router.get('/:projectId', async (req, res) => {
+router.get('/:projectId', isLoggedIn,async (req, res) => {
     console.log("PARAM--> ", req.params)
     await Project.findById(req.params.projectId).populate("initiator collaborators pendingCollabs").then((project) => {
+        // const alreadyCollab = collaborators.find((e) => e._id === )
         res.json(project)
     }).catch((err) => console.log("Fetching the project details failed, ", err))
 })
 
 // handle request to join/leave a project:
-router.post('/:projectId/:userId', async (req, res) => {
+router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
     const {projectId, userId} = req.params;
     console.log("-- TRIGGER --")
     console.log("PARAM--> ", req.params)
@@ -116,7 +119,7 @@ router.post('/:projectId/:userId', async (req, res) => {
 })
 
 // accepting user request
-router.post('/:projectId/:requestingUserId/accept', async (req, res) => {
+router.post('/:projectId/:requestingUserId/accept', isLoggedIn,async (req, res) => {
     const {projectId, requestingUserId} = req.params;
 
     // add to collaborator array:
@@ -127,7 +130,7 @@ router.post('/:projectId/:requestingUserId/accept', async (req, res) => {
 })
 
 // rejecting user request
-router.post('/:projectId/:requestingUserId/reject', async (req, res) => {
+router.post('/:projectId/:requestingUserId/reject', isLoggedIn,async (req, res) => {
     const {projectId, requestingUserId} = req.params;
 
     // remove from pending list:
