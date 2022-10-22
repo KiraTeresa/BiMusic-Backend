@@ -5,6 +5,7 @@ const User = require('../models/User.model')
 const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const isLoggedIn = require('../middleware/isLoggedIn');
+const Sample = require('../models/Sample.model');
 
 // all projects page
 router.get("/", (req, res) => {
@@ -114,9 +115,9 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
     const currentUser = req.user;
 
     // check if current user is the initiator
-    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).then(async (foundProject) => {
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).populate("sample").then(async (foundProject) => {
 
-        const {collaborators, pendingCollabs} = foundProject;
+        const {collaborators, pendingCollabs, sample} = foundProject;
         console.log("Collabs: ", collaborators, "|| Pending: ", pendingCollabs)
 
         // only if user is initiator --> delete project
@@ -137,7 +138,7 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
 
             // remove project from initiator
             await User.findByIdAndUpdate(currentUser, {"$pull": {"ownProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Removed project from initiator.")).catch((err) => console.log("ERROR while trying to pull project from initiator. ", err))
-            
+
         } else {
             res.json("You are not the initiator, you cannot delete this project.")
         }
