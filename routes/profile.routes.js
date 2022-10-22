@@ -88,24 +88,6 @@ router.put("/deleteskill",async (req, res) => {
 });
 
 
-//Delete Project
-// router.delete("/deleteproject/:id",async (req, res) => {
-//   try{
-//     const {id}=req.params;
-//     if(!id) throw createError.NotAcceptable();
-//     const userProject = await Project.findByIdAndDelete(id);
-//     if(!userProject)throw createError.NotFound();
-//     console.log(userProject);
-//     res.status(200).json({message:"Data updated successfulyy!"})
-//   }
-//     catch(err){
-//       console.log(err);
-//       res.json(err);
-//     }
-// });
-
-
-
 
 //Delete Account from account settting (this router will ne removed to seperate router file)
 router.delete("/deleteaccount",async (req, res) => {
