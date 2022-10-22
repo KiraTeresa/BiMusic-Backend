@@ -109,6 +109,25 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
     res.json({project: projectData, aUserStatus: userStatus})
 })
 
+// delete a project
+router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
+    const {projectId} = req.params;
+    const currentUser = req.user;
+
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).then(async (foundProject) => {
+        if(foundProject){
+            await Project.findByIdAndDelete(projectId).then(() => {
+                console.log("Successfully deleted the project.")
+                res.json("Backend deleted the project. Congrats.")
+
+                // TO DO: remove ObjectId from every pending or collaborating user
+            })
+        } else {
+            res.json("You are not the initiator, you cannot delete this project.")
+        }
+    }).catch((err) => console.log("Delete project did not work."))
+})
+
 // handle request to join/leave a project:
 router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
     const {projectId, userId} = req.params;
