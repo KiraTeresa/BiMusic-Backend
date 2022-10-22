@@ -6,7 +6,7 @@ const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const isLoggedIn = require('../middleware/isLoggedIn');
 
-
+// all projects page
 router.get("/", (req, res) => {
     Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
 })
@@ -20,6 +20,7 @@ router.get("/create", isLoggedIn,async (req, res) => {
     }).catch(console.error)
 })
 
+// Add new project
 router.post("/create", isLoggedIn,async (req, res) => {
     console.log("REQ: ", req.body)
     const {title, shortDescription, longDescription, lookingFor, startDate, endDate, isRemote, city, country } = req.body
@@ -60,13 +61,11 @@ router.post("/create", isLoggedIn,async (req, res) => {
     }).catch((err) => console.log("Something went wrong when creating a new project.", err))
 })
 
+// single project page
 router.get('/:projectId', isLoggedIn,async (req, res) => {
     console.log("PARAM--> ", req.params)
     const currentUser = req.user
     const {projectId} = req.params
-    // let alreadyCollab = false;
-    // let alreadyPending = false;
-    // let isInitiator = false;
     let projectData;
     const userStatus = {alreadyCollab: false, alreadyPending: false, isInitiator: false};
 
@@ -163,9 +162,15 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
             console.log("COL-------", element)
             element.equals(userId)
         })
+
         console.log("Already? ", alreadyCollab)
+
         if(alreadyCollab){
-            await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed from collaborators"))
+            // remove user from project
+            await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed user from project collaborators"))
+
+            // remove project from user
+            await User.findByIdAndUpdate(userId, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => res.json("Removed from collabProject"))
         }
 
         // Check if already pending:
@@ -173,12 +178,16 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
             console.log("PEN-------", element)
             element.equals(userId)
         })
+
         console.log("Pending? ", alreadyPending)
+
         if(alreadyPending){
+            // remove user from pending list
             await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed from pending"))
         }
 
         if(!alreadyCollab && !alreadyPending && !isInitiator){
+            // add user to pending list
             await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then((result) => {
             console.log("NEW--> ", result);
             res.json(`-- Added user to pending list --`)
@@ -195,7 +204,11 @@ router.post('/:projectId/:requestingUserId/accept', isLoggedIn,async (req, res) 
     await Project.findByIdAndUpdate(projectId, {"$push": {"collaborators": Types.ObjectId(requestingUserId)}}, {"new": true}).then(async () => {
         
         // remove from pending list:
-        await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true})}).then(()=> res.json("yeah yeah, user request is taken care of.")).catch((err) => console.log("ErroR: ", err))
+        await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(()=> res.json("yeah yeah, user request is taken care of.")).catch((err) => console.log("ErroR: ", err))
+
+        // add project to users collabProjects array
+        await User.findByIdAndUpdate(requestingUserId, {"$push": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Added project to users collabProjects array.")).catch((err) => console.log("Error: ", err))
+    })
 })
 
 // rejecting user request
