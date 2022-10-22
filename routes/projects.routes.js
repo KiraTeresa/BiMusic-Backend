@@ -114,7 +114,13 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
     const {projectId} = req.params;
     const currentUser = req.user;
 
+    // check if current user is the initiator
     await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).then(async (foundProject) => {
+
+        const {collaborators, pendingCollabs} = foundProject;
+        console.log("Collabs: ", collaborators, "|| Pending: ", pendingCollabs)
+
+        // only if user is initiator --> delete project
         if(foundProject){
             await Project.findByIdAndDelete(projectId).then(() => {
                 console.log("Successfully deleted the project.")
@@ -122,6 +128,17 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
 
                 // TO DO: remove ObjectId from every pending or collaborating user
             })
+
+            // remove project from all collab users
+            for (const collab of collaborators){
+                console.log("LOOOOP collabs --- ", collab)
+
+                await User.findByIdAndUpdate(collab, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Removed project from users collaboration list.")).catch((err) => console.log("ERROR while trying to pull project from users collaboration list. ", err))
+            }
+
+            // remove project from initiator
+            await User.findByIdAndUpdate(currentUser, {"$pull": {"ownProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Removed project from initiator.")).catch((err) => console.log("ERROR while trying to pull project from initiator. ", err))
+            
         } else {
             res.json("You are not the initiator, you cannot delete this project.")
         }
