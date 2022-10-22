@@ -4,9 +4,8 @@ const jwt = require("jsonwebtoken");
 const isAuthenticated = require('./jwt.middleware')
 
 function isLoggedIn(req, res, next){
-    console.log("IsLoggedIn Middleware ~~ ", req.headers)
+    // console.log("IsLoggedIn Middleware ~~ ", req.headers)
 
-    console.log("Hello????")
     if(!req.headers.authorization) {
         return notAuthorizedMessage(res)
     }
@@ -19,7 +18,7 @@ function isLoggedIn(req, res, next){
     
     const tokenData = jwt.decode(token)
     
-    console.log("token data: ", tokenData)
+    // console.log("token data: ", tokenData)
 
     User.findById(tokenData._id).select('-password').then((user) => {
         req.user = user._id;

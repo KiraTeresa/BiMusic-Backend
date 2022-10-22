@@ -4,7 +4,6 @@ const Project = require("../models/Project.model")
 const User = require('../models/User.model')
 const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
-const { findByIdAndUpdate } = require('../models/Project.model');
 const isLoggedIn = require('../middleware/isLoggedIn');
 
 
@@ -13,23 +12,18 @@ router.get("/", (req, res) => {
 })
 
 router.get("/create", isLoggedIn,async (req, res) => {
-    // console.log("LOOOOOOOK", req.headers)
     const {userId} = req.query
 
     await User.findById(userId).then((user) => {
         const {country, city} = user
-        // console.log("UUUUUser--> ", user)
-        // res.json(user)
         res.json({country, city})
     }).catch(console.error)
 })
 
 router.post("/create", isLoggedIn,async (req, res) => {
     console.log("REQ: ", req.body)
-    const {title, shortDescription, longDescription, lookingFor, startDate, endDate, isRemote, city, country, initiator } = req.body
-    const user = Types.ObjectId(initiator)
-
-    console.log("Start: ", startDate, " End: ", endDate)
+    const {title, shortDescription, longDescription, lookingFor, startDate, endDate, isRemote, city, country } = req.body
+    const user = Types.ObjectId(req.user)
 
     // Validation: title, shortDescription and longDescription are provided
     if(!title || !shortDescription || !longDescription){
@@ -60,8 +54,6 @@ router.post("/create", isLoggedIn,async (req, res) => {
 
     // If all required data has been sent --> add project to db collection:
     await Project.create({...req.body, initiator: user}).then(async (newProject) => {
-        // console.log("NEW --> ", newProject)
-
         await User.findByIdAndUpdate(user, {$push: {ownProjects: newProject._id}}, {"new": true}).then(()=> console.log("Added new project to users ownProject array."))
 
         res.json(newProject._id)
@@ -70,10 +62,51 @@ router.post("/create", isLoggedIn,async (req, res) => {
 
 router.get('/:projectId', isLoggedIn,async (req, res) => {
     console.log("PARAM--> ", req.params)
-    await Project.findById(req.params.projectId).populate("initiator collaborators pendingCollabs").then((project) => {
-        // const alreadyCollab = collaborators.find((e) => e._id === )
-        res.json(project)
-    }).catch((err) => console.log("Fetching the project details failed, ", err))
+    const currentUser = req.user
+    const {projectId} = req.params
+    // let alreadyCollab = false;
+    // let alreadyPending = false;
+    // let isInitiator = false;
+    let projectData;
+    const userStatus = {alreadyCollab: false, alreadyPending: false, isInitiator: false};
+
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators").then((project) => {
+        if(project){
+            console.log("---- ", "alreadyCollab")
+            userStatus.alreadyCollab = true;
+            projectData = project
+        }
+    }).catch((err) => console.log("in alreadyCollab", err))
+
+    if(!userStatus.alreadyCollab){
+        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {pendingCollabs: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators").then((project) => {
+            if(project){
+                console.log("---- ", "pendingCollab")
+                userStatus.alreadyPending = true;
+                projectData = project
+            }
+        }).catch((err) => console.log("in pendingCollab", err))
+    }
+
+    if(!userStatus.alreadyCollab && !userStatus.alreadyPending){
+        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).populate("initiator collaborators pendingCollabs").then((project) => {
+            if(project){
+                console.log("---- ", "initiator")
+                userStatus.isInitiator = true;
+                projectData = project
+            }
+        }).catch((err) => console.log("in initiator", err))
+    }
+
+    if(!userStatus.alreadyCollab && !userStatus.alreadyPending && !userStatus.isInitiator){
+        await Project.findById(req.params.projectId).populate("initiator collaborators").then((project) => {
+            projectData = project;
+        }).catch((err) => console.log("Fetching the project details failed, ", err))
+    }
+
+    console.log(`Collab: ${userStatus.alreadyCollab}, Pending: ${userStatus.alreadyPending}, Initiator: ${userStatus.isInitiator}`)
+
+    res.json({project: projectData, aUserStatus: userStatus})
 })
 
 // handle request to join/leave a project:
