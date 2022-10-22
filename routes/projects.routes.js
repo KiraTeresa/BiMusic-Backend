@@ -13,6 +13,7 @@ router.get("/", (req, res) => {
 })
 
 router.get("/create", isLoggedIn,async (req, res) => {
+
     const {userId} = req.query
 
     await User.findById(userId).then((user) => {
