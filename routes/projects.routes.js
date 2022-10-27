@@ -70,7 +70,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
     let projectData;
     const userStatus = {alreadyCollab: false, alreadyPending: false, isInitiator: false};
 
-    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators").then((project) => {
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments").then((project) => {
         if(project){
             console.log("---- ", "alreadyCollab")
             userStatus.alreadyCollab = true;
