@@ -5,7 +5,6 @@ const User = require('../models/User.model')
 const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const isLoggedIn = require('../middleware/isLoggedIn');
-const Sample = require('../models/Sample.model');
 
 // all projects page
 router.get("/", (req, res) => {
