@@ -5,7 +5,6 @@ const User = require('../models/User.model')
 const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const isLoggedIn = require('../middleware/isLoggedIn');
-const Sample = require('../models/Sample.model');
 
 // all projects page
 router.get("/", (req, res) => {
@@ -71,7 +70,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
     let projectData;
     const userStatus = {alreadyCollab: false, alreadyPending: false, isInitiator: false};
 
-    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators").then((project) => {
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments").then((project) => {
         if(project){
             console.log("---- ", "alreadyCollab")
             userStatus.alreadyCollab = true;

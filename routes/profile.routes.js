@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User.model.js")
+const User = require("../models/User.model.js");
+const saltRounds = 10;
 const createError = require("http-errors");
-const {
-  request
-} = require("../app.js");
 const Project = require("../models/Project.model.js");
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt")
@@ -138,36 +136,74 @@ router.post("/accountsettings", async (req, res) => {
       email,
       password
     } = req.body;
-    console.log(email,password);
+    console.log(email, password);
     if (!email || !password) throw createError.NotAcceptable();
     // Check the users collection if a user with the same email exists
     const foundUser = await User.findOne({
       email
     });
-    if (!foundUser) {
-      // If the user is not found, send an error response
-      res.status(401).json({
-        message: "User not found."
-      });
-      return;
-    }
+    if (!foundUser) throw createError.NotFound("User not found.")
 
     // Compare the provided password with the one saved in the database
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);
 
-    if (passwordCorrect) {
-      const deleted = await User.findOneAndDelete({
-        email: email
-      })
-      console.log(deleted);
-      res.status(200).json({message:"User is deleted!"});
-    } else {
-      res.status(401).json({
-        message: "Unable to authenticate the user"
-      });
-    }
+    if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
+    const deleted = await User.findOneAndDelete({
+      email: email
+    })
+    console.log(deleted);
+    res.status(200).json({
+      message: "User is deleted!"
+    });
   } catch (err) {
     console.log(err);
+  }
+});
+
+router.put("/accountsettings", async (req, res, next) => {
+  try {
+    const {
+      email,
+      password,
+      changePassword
+    } = req.body;
+
+    console.log(email, password, changePassword);
+
+    if (!email || !password || !changePassword) throw createError.NotAcceptable();
+
+    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
+
+    if (!passwordRegex.test(changePassword)) throw createError.NotAcceptable({
+      message: "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter."
+    })
+
+    // Check the users collection if a user with the same email exists
+    const foundUser = await User.findOne({
+      email
+    });
+    if (!foundUser) throw createError.NotFound("User not found.")
+
+    // Compare the provided password with the one saved in the database
+    const passwordCorrect = await bcrypt.compare(password, foundUser.password);
+
+    if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
+
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(changePassword, salt);
+
+    const updatedUser = await User.findOneAndUpdate({
+      email
+    }, {
+      password: hashedPassword
+    });
+    return res.status(200).json({
+      message: "Password is changed!"
+    });
+
+  } catch (err) {
+    console.log(err);
+    next(err);
   }
 });
 
