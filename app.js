@@ -16,13 +16,13 @@ require("./config")(app);
 
 // 👇 Start handling routes here
 const indexRoutes = require("./routes/index.routes");
-app.use("/abc", indexRoutes);
+app.use("/", indexRoutes);
 
 const authRoutes = require("./routes/auth.routes");
 app.use("/auth", authRoutes);
 
 const profileRoutes = require("./routes/profile.routes");
-app.use("/profile/", profileRoutes);
+app.use("/profile", profileRoutes);
 
 const projectRoutes = require("./routes/projects.routes")
 app.use("/projects", projectRoutes)
