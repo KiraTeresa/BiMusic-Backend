@@ -2,9 +2,6 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User.model.js")
 const createError = require("http-errors");
-const {
-  request
-} = require("../app.js");
 const Project = require("../models/Project.model.js");
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt")
