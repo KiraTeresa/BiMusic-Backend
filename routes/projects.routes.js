@@ -11,10 +11,9 @@ router.get("/", (req, res) => {
     Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
 })
 
+// get project form
 router.get("/create", isLoggedIn,async (req, res) => {
-
     const {userId} = req.query
-
     await User.findById(userId).then((user) => {
         const {country, city} = user
         res.json({country, city})
@@ -70,7 +69,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
     const userStatus = {alreadyCollab: false, alreadyPending: false, isInitiator: false};
 
     // checks, if current user is already a collaborator in this project:
-    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments").then((project) => {
+    await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {collaborators: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments sample").then((project) => {
         if(project){
             console.log("---- ", "alreadyCollab")
             userStatus.alreadyCollab = true;
@@ -80,7 +79,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
 
     // checks, if current user is already waiting to become a collaborator:
     if(!userStatus.alreadyCollab){
-        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {pendingCollabs: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments").then((project) => {
+        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {pendingCollabs: {$in: Types.ObjectId(currentUser)}}]}).populate("initiator collaborators comments sample").then((project) => {
             if(project){
                 console.log("---- ", "pendingCollab")
                 userStatus.alreadyPending = true;
@@ -91,7 +90,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
 
     // checks, if current user is the initiator of this project:
     if(!userStatus.alreadyCollab && !userStatus.alreadyPending){
-        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).populate("initiator collaborators pendingCollabs comments").then((project) => {
+        await Project.findOne({$and: [{_id: Types.ObjectId(projectId)}, {initiator: Types.ObjectId(currentUser)}]}).populate("initiator collaborators pendingCollabs comments sample").then((project) => {
             if(project){
                 console.log("---- ", "initiator")
                 userStatus.isInitiator = true;
@@ -102,7 +101,7 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
 
     // if none of the above applies, this code will be executed:
     if(!userStatus.alreadyCollab && !userStatus.alreadyPending && !userStatus.isInitiator){
-        await Project.findById(req.params.projectId).populate("initiator collaborators comments").then((project) => {
+        await Project.findById(req.params.projectId).populate("initiator collaborators comments sample").then((project) => {
             projectData = project;
         }).catch((err) => console.log("Fetching the project details failed, ", err))
     }
