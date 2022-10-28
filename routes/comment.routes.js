@@ -9,7 +9,7 @@ const User = require("../models/User.model");
 router.post("/:projectId", isLoggedIn, async (req, res) => {
     const {projectId} = req.params;
     const {commentText} = req.body;
-    console.log("Query: ", req.user)
+    // console.log("Query: ", req.user)
 
     // create the comment:
     await Comment.create({text: commentText, author: req.user, project: Types.ObjectId(projectId)}).then(async (result) => {
