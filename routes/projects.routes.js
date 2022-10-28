@@ -151,8 +151,8 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
 // handle request to join/leave a project:
 router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
     const {projectId, userId} = req.params;
-    console.log("-- TRIGGER --")
-    console.log("PARAM--> ", req.params)
+    // console.log("-- TRIGGER --")
+    // console.log("PARAM--> ", req.params)
 
     await Project.findById(projectId).then(async (project) => {
         const {initiator, collaborators, pendingCollabs} = project;
@@ -163,10 +163,8 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
 
         // Check if already collab:
         const alreadyCollab = await collaborators.find(async (element) => {
-            console.log("COL-------", element)
             element.equals(userId)
         })
-
         console.log("Already? ", alreadyCollab)
 
         if(alreadyCollab){
@@ -174,15 +172,13 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
             await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed user from project collaborators"))
 
             // remove project from user
-            await User.findByIdAndUpdate(userId, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => res.json("Removed from collabProject"))
+            await User.findByIdAndUpdate(userId, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => res.json("Removed from users collabProjects"))
         }
 
         // Check if already pending:
         const alreadyPending = await pendingCollabs.find(async (element) => {
-            console.log("PEN-------", element)
             element.equals(userId)
         })
-
         console.log("Pending? ", alreadyPending)
 
         if(alreadyPending){
@@ -192,8 +188,7 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
 
         if(!alreadyCollab && !alreadyPending && !isInitiator){
             // add user to pending list
-            await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then((result) => {
-            console.log("NEW--> ", result);
+            await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => {
             res.json(`-- Added user to pending list --`)
             })
         }
