@@ -33,6 +33,9 @@ app.use("/samples", samplesRoutes)
 const commentRoutes = require("./routes/comment.routes")
 app.use("/comment", commentRoutes)
 
+const chatRoutes = require("./routes/chat.routes")
+app.use("/chats", chatRoutes)
+
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require("./error-handling")(app);
 
