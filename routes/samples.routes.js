@@ -59,7 +59,7 @@ router.post("/create", async (req, res) => {
     // }
 
     // Validation: link type
-    if (linkType !== "audio" && linkType !== "video") {
+    if (linkType !== "url" && linkType !== "upload") {
         res.status(400).json({
             message: "Link type 'audio' or 'video' must me checked"
         });

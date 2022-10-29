@@ -30,6 +30,9 @@ app.use("/projects", projectRoutes)
 const samplesRoutes = require("./routes/samples.routes")
 app.use("/samples", samplesRoutes)
 
+const userRoutes = require("./routes/user.routes")
+app.use("/initiator", userRoutes)
+
 const commentRoutes = require("./routes/comment.routes")
 app.use("/comment", commentRoutes)
 

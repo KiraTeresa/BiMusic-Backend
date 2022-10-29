@@ -4,6 +4,7 @@ const User = require("../models/User.model.js");
 const saltRounds = 10;
 const createError = require("http-errors");
 const Project = require("../models/Project.model.js");
+const Sample=require("../models/Sample.model.js")
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt")
 
@@ -148,10 +149,16 @@ router.post("/accountsettings", async (req, res) => {
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);
 
     if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
-    const deleted = await User.findOneAndDelete({
+    console.log(foundUser);
+    const deletedProject = await Project.deleteMany({
+      initiator: foundUser._id
+    });
+    const deletedSample = await Sample.deleteMany({
+      artist: foundUser._id
+    });
+    const deletedProfile = await User.findOneAndDelete({
       email: email
     })
-    console.log(deleted);
     res.status(200).json({
       message: "User is deleted!"
     });
