@@ -66,8 +66,7 @@ router.post("/", isLoggedIn, async (req, res) => {
 
 // get info of single chat room
 router.get("/:chatId", isLoggedIn, async (req, res) => {
-    await Chat.findById(req.params.chatId).populate({
-        path : 'project',
+    await Chat.findById(req.params.chatId).populate("project").populate({
         path: 'history',
         populate : {
           path : 'author'
