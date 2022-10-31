@@ -11,7 +11,7 @@ const clients = []
 const wss = new WebSocket.Server({port: 8082})
 
 wss.on("connection", ws => {
-    console.log("Connected to WebSocket Backend ")
+    console.log(">>> Connected to WebSocket Backend >>>")
     clients.push({userID: ws})
 
     ws.on("message", data =>{
@@ -30,7 +30,7 @@ wss.on("connection", ws => {
     })
 
     ws.on("close", ()=>{
-    console.log(">>> Client has disconnected. Sad. <<<")
+    console.log("<<< Client has disconnected. <<<")
     })
 })
 
@@ -66,14 +66,30 @@ router.post("/", isLoggedIn, async (req, res) => {
 
 // get single chat room
 router.get("/:chatId", isLoggedIn, async (req, res) => {
-    await Chat.findById(req.params.chatId).populate({path: 'project', populate: {
+    const {chatId} = req.params
+    const currentUser = req.user
+    console.log("ONE")
+
+    await Chat.findById(chatId).populate({path: 'project', populate: {
         path: 'collaborators'}
     }).populate({
         path: 'history',
         populate : {
           path : 'author'
         }
-      }).then((chatFound) => res.json(chatFound)).catch((err) => console.log("Error when finding the chat data ", err))
+      }).then((chatFound) => {
+        console.log("TWO TWO")
+        const {initiator, collaborators} = chatFound.project
+        const isInitiator = initiator.equals(currentUser)
+        const isCollab = collaborators.find((element) => element.equals(currentUser))
+
+        if (isInitiator || isCollab){
+            res.json(chatFound)
+        } else {
+            res.status(400).json({ message: "You need to be a collaborator in order to join the chat." })
+            return
+        }
+    }).catch((err) => console.log("Error when finding the chat data ", err))
 })
 
 module.exports = router
