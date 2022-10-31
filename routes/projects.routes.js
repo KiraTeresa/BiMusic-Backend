@@ -151,7 +151,8 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
 router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
     const {projectId, userId} = req.params;
     // console.log("-- TRIGGER --")
-    // console.log("PARAM--> ", req.params)
+    // console.log("PARAM--> ", userId)
+    // console.log("REQ--> ", req.user)
 
     await Project.findById(projectId).then(async (project) => {
         const {initiator, collaborators, pendingCollabs} = project;
@@ -161,9 +162,7 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
         console.log("Initiator? ", isInitiator)
 
         // Check if already collab:
-        const alreadyCollab = await collaborators.find(async (element) => {
-            element.equals(userId)
-        })
+        const alreadyCollab = collaborators.find((element) => element.equals(userId))
         console.log("Already? ", alreadyCollab)
 
         if(alreadyCollab){

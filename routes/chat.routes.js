@@ -15,9 +15,9 @@ wss.on("connection", ws => {
     clients.push({userID: ws})
 
     ws.on("message", data =>{
-    console.log("Client has sent us ----> ", JSON.parse(data))
+    // console.log("Client has sent us ----> ", JSON.parse(data))
         if (JSON.parse(data).msg){
-            console.log("Received Message: ", JSON.parse(data).msg)
+            // console.log("Received Message: ", JSON.parse(data).msg)
             
             // forward message to all clients:
             for(const person of clients){
@@ -38,7 +38,7 @@ wss.on("connection", ws => {
 router.get("/", isLoggedIn, async (req,res) => {
     // console.log("The REQ: ", req)
     const currentUser = req.user;
-    console.log("New client connected. Welcome, ", currentUser)
+    // console.log("New client connected. Welcome, ", currentUser)
     let allProjects
     const existingChats = []
 
