@@ -64,9 +64,11 @@ router.post("/", isLoggedIn, async (req, res) => {
     }).catch(() => console.log("Creating a new chat failed."))
 })
 
-// get info of single chat room
+// get single chat room
 router.get("/:chatId", isLoggedIn, async (req, res) => {
-    await Chat.findById(req.params.chatId).populate("project").populate({
+    await Chat.findById(req.params.chatId).populate({path: 'project', populate: {
+        path: 'collaborators'}
+    }).populate({
         path: 'history',
         populate : {
           path : 'author'
