@@ -36,12 +36,11 @@ wss.on("connection", ws => {
 
 // get active chats of current user & projects list, to create new rooms
 router.get("/", isLoggedIn, async (req,res) => {
-    // console.log("The REQ: ", req)
     const currentUser = req.user;
-    // console.log("New client connected. Welcome, ", currentUser)
     let allProjects
     const existingChats = []
 
+    // get chats of the projects where user is initiator:
     await Project.find({initiator: currentUser}).then(async (projectsArr) => {
         allProjects = projectsArr
     
@@ -52,7 +51,18 @@ router.get("/", isLoggedIn, async (req,res) => {
                 }
             })
         }
-    
+
+    // get chats of the projects where user is collaborator:  
+    }).then(async ()=> {
+        await Project.find({collaborators: {$in: currentUser}}).then(async (collabProj) => {
+            for(const proj of collabProj){
+                await Chat.findOne({project: Types.ObjectId(proj._id)}).populate('project').then((chatFound) => {
+                    if(chatFound){
+                        existingChats.push(chatFound)
+                    }
+                })
+            }
+        })
     }).then(() => res.status(200).json({allProjects, existingChats})).catch((err) => console.log("ERRor: ", err))
 })
 
