@@ -3,11 +3,11 @@ const router = express.Router();
 const User = require("../models/User.model.js");
 const createError = require("http-errors");
 
-router.get("/", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const {
       id
-    } = req.query;
+    } = req.params;
     const userInfo = await User.findOne({
       _id: id
     }, "-password"); //Exclude password
