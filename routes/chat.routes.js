@@ -69,8 +69,15 @@ router.get("/", isLoggedIn, async (req,res) => {
 // create new chat room
 router.post("/", isLoggedIn, async (req, res) => {
     console.log("Data from frontend to create new chat: ", req.body)
-    await Chat.create({project: Types.ObjectId(req.body.newChat)}).then(() => {
-        res.status(200).json("got it")
+
+    await Chat.findOne({project: Types.ObjectId(req.body.newChat)}).then(async (chatFound) => {
+        if(chatFound){
+            res.status(400).json({message: "The chat for this project already exists."})
+        } else {
+            await Chat.create({project: Types.ObjectId(req.body.newChat)}).then((chat) => {
+                res.status(200).json(chat)
+            })
+        }
     }).catch(() => console.log("Creating a new chat failed."))
 })
 
