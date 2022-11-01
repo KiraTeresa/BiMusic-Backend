@@ -15,17 +15,24 @@ wss.on("connection", ws => {
     clients.push({userID: ws})
 
     ws.on("message", data =>{
-    // console.log("Client has sent us ----> ", JSON.parse(data))
-        if (JSON.parse(data).msg){
-            // console.log("Received Message: ", JSON.parse(data).msg)
-            
-            // forward message to all clients:
-            for(const person of clients){
-                const usersWebSocket = person.userID
-                usersWebSocket.send(JSON.stringify(JSON.parse(data)))
-                // console.log("Message sent to: ", usersWebSocket)
+        wss.clients.forEach(function each(client) {
+            if(client.readyState === WebSocket.OPEN){
+                client.send(JSON.stringify(JSON.parse(data)))
             }
-        }
+        })
+
+
+    // console.log("Client has sent us ----> ", JSON.parse(data))
+        // if (JSON.parse(data).msg){
+        //     // console.log("Received Message: ", JSON.parse(data).msg)
+            
+        //     // forward message to all clients:
+        //     for(const person of clients){
+        //         const usersWebSocket = person.userID
+        //         usersWebSocket.send(JSON.stringify(JSON.parse(data)))
+        //         // console.log("Message sent to: ", usersWebSocket)
+        //     }
+        // }
         // ws.send(data.toString())
     })
 
