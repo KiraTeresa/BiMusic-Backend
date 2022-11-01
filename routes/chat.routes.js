@@ -74,7 +74,7 @@ router.post("/", isLoggedIn, async (req, res) => {
         if(chatFound){
             res.status(400).json({message: "The chat for this project already exists."})
         } else {
-            await Chat.create({project: Types.ObjectId(req.body.newChat)}).then((chat) => {
+            await (await Chat.create({project: Types.ObjectId(req.body.newChat)})).populate('project').then((chat) => {
                 res.status(200).json(chat)
             })
         }
