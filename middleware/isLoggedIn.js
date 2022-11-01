@@ -22,7 +22,7 @@ function isLoggedIn(req, res, next){
 
     User.findById(tokenData._id).select('-password').then((user) => {
         req.user = user._id;
-        console.log("Added current user to req >> ", req.user)
+        // console.log("Added current user to req >> ", req.user)
         next();
     }).catch((err) => {
         console.log("Error in isLoggedIn middleware: ", err);
