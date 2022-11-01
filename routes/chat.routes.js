@@ -81,7 +81,7 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
     console.log("ONE")
 
     await Chat.findById(chatId).populate({path: 'project', populate: {
-        path: 'collaborators'}
+        path: 'collaborators initiator'}
     }).populate({
         path: 'history',
         populate : {
