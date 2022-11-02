@@ -21,13 +21,13 @@ io.on('connection', (socket) => {
 
   socket.on("send", (data) => {
     const {chat} = data
-    io.in(chat).emit("send", data)
+    io.sockets.in(`room-${chat}`).emit("send", data)
     console.log("Client has sent us: ", data)
   })
 
-  socket.on("join", (chatId) => {
-    socket.join(chatId)
-    console.log("ChatId: ", chatId)
-    console.log("-- room??? --- ", socket.rooms)
+  socket.on("join", (room) => {
+    socket.join(room)
+    console.log("room: ", room)
+    console.log("-- rooms --- ", socket.rooms)
   })
 })
