@@ -1,38 +1,45 @@
 const express = require('express')
 const router = express.Router();
 const { Types } = require('mongoose')
-const WebSocket = require('ws')
 const isLoggedIn = require('../middleware/isLoggedIn');
 const Project = require("../models/Project.model")
 const Chat = require("../models/Chat.model")
 
 // WebSocket Server
-const clients = []
-const wss = new WebSocket.Server({port: 8082})
+// const clients = []
+// const wss = new WebSocket.Server({port: 8082})
 
-wss.on("connection", ws => {
-    console.log(">>> Connected to WebSocket Backend >>>")
-    clients.push({userID: ws})
+// wss.on("connection", ws => {
+//     console.log(">>> Connected to WebSocket Backend >>>")
+//     clients.push({userID: ws})
+//     console.log("Clients so far: ", clients)
 
-    ws.on("message", data =>{
-    // console.log("Client has sent us ----> ", JSON.parse(data))
-        if (JSON.parse(data).msg){
-            // console.log("Received Message: ", JSON.parse(data).msg)
+//     ws.on("message", data =>{
+//         wss.clients.forEach(function each(client) {
+//             if(client.readyState === WebSocket.OPEN){
+//                 client.send(JSON.stringify(JSON.parse(data)))
+//             }
+//         })
+
+
+//     // console.log("Client has sent us ----> ", JSON.parse(data))
+//         // if (JSON.parse(data).msg){
+//         //     // console.log("Received Message: ", JSON.parse(data).msg)
             
-            // forward message to all clients:
-            for(const person of clients){
-                const usersWebSocket = person.userID
-                usersWebSocket.send(JSON.stringify(JSON.parse(data)))
-                // console.log("Message sent to: ", usersWebSocket)
-            }
-        }
-        // ws.send(data.toString())
-    })
+//         //     // forward message to all clients:
+//         //     for(const person of clients){
+//         //         const usersWebSocket = person.userID
+//         //         usersWebSocket.send(JSON.stringify(JSON.parse(data)))
+//         //         // console.log("Message sent to: ", usersWebSocket)
+//         //     }
+//         // }
+//         // ws.send(data.toString())
+//     })
 
-    ws.on("close", ()=>{
-    console.log("<<< Client has disconnected. <<<")
-    })
-})
+//     ws.on("close", ()=>{
+//     console.log("<<< Client has disconnected. <<<")
+//     })
+// })
 
 // get active chats of current user & projects list, to create new rooms
 router.get("/", isLoggedIn, async (req,res) => {
@@ -74,7 +81,7 @@ router.post("/", isLoggedIn, async (req, res) => {
         if(chatFound){
             res.status(400).json({message: "The chat for this project already exists."})
         } else {
-            await Chat.create({project: Types.ObjectId(req.body.newChat)}).then((chat) => {
+            await (await Chat.create({project: Types.ObjectId(req.body.newChat)})).populate('project').then((chat) => {
                 res.status(200).json(chat)
             })
         }
@@ -85,7 +92,6 @@ router.post("/", isLoggedIn, async (req, res) => {
 router.get("/:chatId", isLoggedIn, async (req, res) => {
     const {chatId} = req.params
     const currentUser = req.user
-    console.log("ONE")
 
     await Chat.findById(chatId).populate({path: 'project', populate: {
         path: 'collaborators initiator'}
@@ -95,7 +101,6 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
           path : 'author'
         }
       }).then((chatFound) => {
-        console.log("TWO TWO")
         const {initiator, collaborators} = chatFound.project
         const isInitiator = initiator.equals(currentUser)
         const isCollab = collaborators.find((element) => element.equals(currentUser))
