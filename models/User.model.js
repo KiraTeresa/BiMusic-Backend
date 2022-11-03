@@ -65,8 +65,9 @@ const userSchema = new Schema(
         ref: "Sample"
       }]
     },
-    lastLogin: {
-      type: Date,
+    status: {
+      type: String,
+      enum: ["online", "offline"]
     }
 },
   {

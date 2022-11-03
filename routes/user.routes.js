@@ -20,10 +20,10 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// updates last login date, gets requested on logout
+// updates user status, gets requested on logout
 router.put("/:userId", isLoggedIn, async (req, res) => {
   const {userId} = req.params
-  await User.findByIdAndUpdate(userId, {lastLogin: new Date()}, {new: true}).then(() => res.json("Server successfully updated login date.")).catch((err)=>console.log("Updating login date did not work. ", err))
+  await User.findByIdAndUpdate(userId, {status: "offline"}, {new: true}).then(() => res.json("Server successfully set user status to offline.")).catch((err)=>console.log("Updating user status did not work. ", err))
 })
 
 
