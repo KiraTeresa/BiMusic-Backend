@@ -19,7 +19,7 @@ io.on('connection', (socket) => {
   console.log("HEY, welcome to the chat.")
 
   socket.on("disconnect", () => {
-    console.log("BYE, see u soon.")
+    console.log("BYE, see you soon.")
   })
 
   socket.on("send", (data) => {
@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
 
   socket.on("join", (room) => {
     socket.join(room)
-    console.log("room: ", room)
-    console.log("-- rooms --- ", socket.rooms)
+    // console.log("room: ", room)
+    // console.log("-- rooms --- ", socket.rooms)
   })
 })
