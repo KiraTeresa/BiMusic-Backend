@@ -6,6 +6,16 @@ const Sample = require('../models/Sample.model');
 const User = require('../models/User.model');
 const createError = require("http-errors");
 
+// all samples route
+router.get("/", async (req, res) => {
+    try {
+        const result = await Sample.find();
+        res.json(result);
+    } catch (err) {
+        console.log("ERROR getting data from db ", err)
+    }
+})
+
 router.get("/create", async (req, res) => {
     console.log("REQ SAMPLE CREATE: ", req.query)
     const {
