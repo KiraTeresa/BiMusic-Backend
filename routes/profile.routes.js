@@ -6,7 +6,9 @@ const createError = require("http-errors");
 const Project = require("../models/Project.model.js");
 const Sample=require("../models/Sample.model.js")
 const isLoggedIn = require("../middleware/isLoggedIn.js");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const Message = require("../models/Message.model.js");
+const Chat = require("../models/Chat.model.js");
 
 router.post("/", async (req, res) => {
   try {
@@ -150,15 +152,34 @@ router.post("/accountsettings", async (req, res) => {
 
     if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
     console.log(foundUser);
-    const deletedProject = await Project.deleteMany({
+    const deletedProject = await Project.find({
       initiator: foundUser._id
     });
+
+    await Project.deleteMany({initiator: foundUser._id});
+
     const deletedSample = await Sample.deleteMany({
       artist: foundUser._id
     });
     const deletedProfile = await User.findOneAndDelete({
       email: email
     })
+
+    // delete chats of users projects
+    for(const proj of deletedProject){
+      await Chat.deleteMany({project: proj._id}).then(async (deletedChat) => {
+        // delete all messages of chat history
+        await Message.deleteMany({chatId: deletedChat._id})
+      })
+
+    }
+    // remove user from own messages, but don't delete them
+    const usersMessages = await Message.updateMany({author: foundUser._id}, {$unset: {author: "", text: "-"}, $pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
+    console.log("Test 1 - ", usersMessages)
+    // remove user from other peoples messages
+    const otherPeoplesMessages = await Message.updateMany({$or: [{readBy: {$in: foundUser._id}, sendTo: {$in: foundUser._id}}]}, {$pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
+    console.log("Test 2 - ", otherPeoplesMessages)
+
     res.status(200).json({
       message: "User is deleted!"
     });
