@@ -8,7 +8,21 @@ const messageSchema = new Schema(
       },
         text: {
             type: String
-        }
+      },
+        sendTo: {
+          type: [{
+            type: Schema.Types.ObjectId,
+            ref: "User"}]
+      },
+        readBy: {
+          type: [{
+            type: Schema.Types.ObjectId,
+            ref: "User"}]
+      },
+        chatId: {
+          type: Schema.Types.ObjectId,
+          ref: "Chat"
+      },
     },
     {
       timestamps: true,

@@ -65,6 +65,10 @@ const userSchema = new Schema(
         ref: "Sample"
       }]
     },
+    status: {
+      type: String,
+      enum: ["online", "offline"]
+    }
 },
   {
     timestamps: true,

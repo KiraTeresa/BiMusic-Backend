@@ -87,7 +87,7 @@ router.post("/login", (req, res, next) => {
 
   // Check the users collection if a user with the same email exists
   User.findOne({ email })
-    .then((foundUser) => {
+    .then(async (foundUser) => {
       if (!foundUser) {
         // If the user is not found, send an error response
         res.status(401).json({ message: "User not found." });
@@ -109,6 +109,9 @@ router.post("/login", (req, res, next) => {
           algorithm: "HS256",
           expiresIn: "6h",
         });
+
+        // set user status to "online"
+        await User.findByIdAndUpdate(foundUser._id, {status: "online"}, {new: true})
 
         // Send the token as the response
         res.status(200).json({ authToken: authToken });

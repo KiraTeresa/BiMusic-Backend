@@ -5,41 +5,6 @@ const isLoggedIn = require('../middleware/isLoggedIn');
 const Project = require("../models/Project.model")
 const Chat = require("../models/Chat.model")
 
-// WebSocket Server
-// const clients = []
-// const wss = new WebSocket.Server({port: 8082})
-
-// wss.on("connection", ws => {
-//     console.log(">>> Connected to WebSocket Backend >>>")
-//     clients.push({userID: ws})
-//     console.log("Clients so far: ", clients)
-
-//     ws.on("message", data =>{
-//         wss.clients.forEach(function each(client) {
-//             if(client.readyState === WebSocket.OPEN){
-//                 client.send(JSON.stringify(JSON.parse(data)))
-//             }
-//         })
-
-
-//     // console.log("Client has sent us ----> ", JSON.parse(data))
-//         // if (JSON.parse(data).msg){
-//         //     // console.log("Received Message: ", JSON.parse(data).msg)
-            
-//         //     // forward message to all clients:
-//         //     for(const person of clients){
-//         //         const usersWebSocket = person.userID
-//         //         usersWebSocket.send(JSON.stringify(JSON.parse(data)))
-//         //         // console.log("Message sent to: ", usersWebSocket)
-//         //     }
-//         // }
-//         // ws.send(data.toString())
-//     })
-
-//     ws.on("close", ()=>{
-//     console.log("<<< Client has disconnected. <<<")
-//     })
-// })
 
 // get active chats of current user & projects list, to create new rooms
 router.get("/", isLoggedIn, async (req,res) => {
