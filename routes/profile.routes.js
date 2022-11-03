@@ -152,6 +152,8 @@ router.post("/accountsettings", async (req, res) => {
 
     if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
     console.log(foundUser);
+
+    // get all projects which are going to be deleted; needed to also delete chats
     const deletedProject = await Project.find({
       initiator: foundUser._id
     });
@@ -167,15 +169,20 @@ router.post("/accountsettings", async (req, res) => {
 
     // delete chats of users projects
     for(const proj of deletedProject){
-      await Chat.deleteMany({project: proj._id}).then(async (deletedChat) => {
-        // delete all messages of chat history
-        await Message.deleteMany({chatId: deletedChat._id})
-      })
-
+      // first store all chats which are about to be deleted:
+      const deletedChat = await Chat.findOne({project: proj._id})
+      
+      // actually delete the chats:
+      await Chat.deleteMany({project: proj._id})
+      
+      // delete all messages of that chat history:
+      await Message.deleteMany({chatId: deletedChat._id})
     }
+
     // remove user from own messages, but don't delete them
     const usersMessages = await Message.updateMany({author: foundUser._id}, {$unset: {author: "", text: "-"}, $pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
     console.log("Test 1 - ", usersMessages)
+
     // remove user from other peoples messages
     const otherPeoplesMessages = await Message.updateMany({$or: [{readBy: {$in: foundUser._id}, sendTo: {$in: foundUser._id}}]}, {$pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
     console.log("Test 2 - ", otherPeoplesMessages)
