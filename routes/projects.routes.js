@@ -6,6 +6,7 @@ const { Types } = require('mongoose')
 const compareAsc = require('date-fns/compareAsc');
 const isLoggedIn = require('../middleware/isLoggedIn');
 const Chat = require('../models/Chat.model');
+const Message = require('../models/Message.model');
 
 // all projects page
 router.get("/", (req, res) => {
@@ -143,7 +144,14 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
             res.json("You are not the initiator, you cannot delete this project.")
         }
     }).then(async () => {
+        
+        // delete related chat:
+        const deletedChat = await Chat.findOne({project: Types.ObjectId(projectId)})
         await Chat.findOneAndDelete({project: Types.ObjectId(projectId)})
+
+        // delete chat messages:
+        await Message.deleteMany({chatId: deletedChat._id})
+
         res.json("Backend deleted the project. Congrats.")
     }).catch((err) => console.log("Delete project did not work.", err))
 })
