@@ -22,6 +22,7 @@ function isLoggedIn(req, res, next){
 
     User.findById(tokenData._id).select('-password').then((user) => {
         req.user = user._id;
+        req.lastLogin = user.lastLogin;
         // console.log("Added current user to req >> ", req.user)
         next();
     }).catch((err) => {

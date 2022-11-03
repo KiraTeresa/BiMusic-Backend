@@ -8,6 +8,11 @@ const messageSchema = new Schema(
       },
         text: {
             type: String
+        },
+        readBy: {
+          type: [{
+            type: Schema.Types.ObjectId,
+            ref: "User"}]
         }
     },
     {
