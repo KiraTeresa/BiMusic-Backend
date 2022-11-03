@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User.model.js");
+const isLoggedIn = require("../middleware/isLoggedIn")
 const createError = require("http-errors");
 
 router.get("/:id", async (req, res) => {
@@ -19,6 +20,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// updates last login date, gets requested on logout
+router.put("/:userId", isLoggedIn, async (req, res) => {
+  const {userId} = req.params
+  await User.findByIdAndUpdate(userId, {lastLogin: new Date()}, {new: true}).then(() => res.json("Server successfully updated login date.")).catch((err)=>console.log("Updating login date did not work. ", err))
+})
 
 
 

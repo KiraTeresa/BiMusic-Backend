@@ -65,6 +65,9 @@ const userSchema = new Schema(
         ref: "Sample"
       }]
     },
+    lastLogin: {
+      type: Date,
+    }
 },
   {
     timestamps: true,
