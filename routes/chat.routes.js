@@ -70,8 +70,24 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
         const isInitiator = initiator.equals(currentUser)
         const isCollab = collaborators.find((element) => element.equals(currentUser))
 
+        // get only message history since user is part of the chat:
+        const usersHistory = []
+        
+        chatFound.history.map((msg) => {
+            // const userWasPart = msg.sendTo.includes(currentUser)
+            if(msg.sendTo.includes(currentUser)){
+                if(msg.author){
+                    usersHistory.push(msg)
+                } else {
+                    // mark msg from deleted users:
+                    usersHistory.push({...msg, author: {name: "deleted user"}})
+                }
+            }
+        })
+        console.log("USER HISTORY ", usersHistory)
+
         if (isInitiator || isCollab){
-            res.json(chatFound)
+            res.json({chatFound, usersHistory})
         } else {
             res.status(400).json({ message: "You need to be a collaborator in order to join the chat." })
             return
