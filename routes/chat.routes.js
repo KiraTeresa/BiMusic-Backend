@@ -40,17 +40,22 @@ router.get("/", isLoggedIn, async (req,res) => {
 
 // create new chat room
 router.post("/", isLoggedIn, async (req, res) => {
-    console.log("Data from frontend to create new chat: ", req.body)
+    const {newChat} = req.body
 
-    await Chat.findOne({project: Types.ObjectId(req.body.newChat)}).then(async (chatFound) => {
-        if(chatFound){
-            res.status(400).json({message: "The chat for this project already exists."})
-        } else {
-            await (await Chat.create({project: Types.ObjectId(req.body.newChat)})).populate('project').then((chat) => {
-                res.status(200).json(chat)
-            })
-        }
-    }).catch(() => console.log("Creating a new chat failed."))
+    // check if user sent valid input:
+    if(Object.keys(newChat).length !== 0){
+        await Chat.findOne({project: Types.ObjectId(req.body.newChat)}).then(async (chatFound) => {
+            if(chatFound){
+                res.status(400).json({message: "The chat for this project already exists."})
+            } else {
+                await (await Chat.create({project: Types.ObjectId(req.body.newChat)})).populate('project').then((chat) => {
+                    res.status(200).json(chat)
+                })
+            }
+        }).catch(() => console.log("Creating a new chat failed."))
+    } else {
+            res.status(400).json({message: "Please select a project in order to create a chat."})
+    }
 })
 
 // get single chat room
