@@ -21,14 +21,6 @@ const userSchema = new Schema(
       min: 5,
       max: 20,
     },
-    // firstName: {
-    //   type: String,
-    //   required: [true, "First name is required."],
-    // },
-    // lastName: {
-    //   type: String,
-    //   required: [true, "Last name is required."],
-    // },
     aboutMe: {
       type: String,
     },
@@ -37,6 +29,7 @@ const userSchema = new Schema(
     },
     avatar: {
       type: String,
+      default: "https://i.stack.imgur.com/frlIf.png",
     },
     cloudinary_id: {
       type: String,

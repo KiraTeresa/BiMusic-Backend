@@ -31,7 +31,7 @@ const samplesRoutes = require("./routes/samples.routes")
 app.use("/samples", samplesRoutes)
 
 const userRoutes = require("./routes/user.routes")
-app.use("/initiator", userRoutes)
+app.use("/user", userRoutes)
 
 const commentRoutes = require("./routes/comment.routes")
 app.use("/comment", commentRoutes)
@@ -44,9 +44,6 @@ app.use("/chats", chatRoutes)
 
 const messageRoutes = require("./routes/message.routes")
 app.use("/message", messageRoutes)
-
-const accountSettingsRoutes = require("./routes/accountsettings.routes")
-app.use("/accountsettings", accountSettingsRoutes)
 
 // ❗ To handle errors. Routes that don't exist or errors that you handle in specific routes
 require("./error-handling")(app);

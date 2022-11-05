@@ -15,8 +15,7 @@ const feedbackSchema = new Schema(
         },
         author: {
             type: Schema.Types.ObjectId,
-            ref: "User",
-            required: true
+            ref: "User"
         },
         sample: {
             type: Schema.Types.ObjectId,
