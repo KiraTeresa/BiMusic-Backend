@@ -84,12 +84,22 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
                 if(msg.author){
                     usersHistory.push(msg)
                 } else {
+                    console.log("MSG: ", msg)
                     // mark msg from deleted users:
-                    usersHistory.push({...msg, author: {name: "deleted user"}})
+                    const msgFromDeletedUser = {
+                        author: {name: "deleted user"},
+                        text: msg.text,
+                        sendTo: msg.sendTo,
+                        readBy: msg.readBy,
+                        chatId: msg.chatId,
+                        createdAt: msg.createdAt,
+                        _id: msg._id
+                    }
+                    usersHistory.push(msgFromDeletedUser)
                 }
             }
         })
-        console.log("USER HISTORY ", usersHistory)
+        // console.log("USER HISTORY ", usersHistory)
 
         if (isInitiator || isCollab){
             res.json({chatFound, usersHistory})

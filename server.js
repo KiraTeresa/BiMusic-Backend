@@ -30,7 +30,5 @@ io.on('connection', (socket) => {
 
   socket.on("join", (room) => {
     socket.join(room)
-    // console.log("room: ", room)
-    // console.log("-- rooms --- ", socket.rooms)
   })
 })

@@ -20,8 +20,8 @@ router.post("/:projectId", isLoggedIn, async (req, res) => {
 })
 
 // get name of author
-router.get("/:author", isLoggedIn, async (req, res) => {
-    await User.findById(req.params.author).then((result) => res.json(result.name)).catch((err) => console.log("Sorry, no author found.", err))
-})
+// router.get("/:author", isLoggedIn, async (req, res) => {
+//     await User.findById(req.params.author).then((result) => res.json(result.name)).catch((err) => console.log("Sorry, no author found.", err))
+// })
 
 module.exports = router;
