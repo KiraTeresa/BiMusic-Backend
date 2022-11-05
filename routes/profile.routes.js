@@ -9,6 +9,7 @@ const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
 const Chat = require("../models/Chat.model.js");
+const Comment = require("../models/Comment.model")
 
 router.post("/", async (req, res) => {
   try {
@@ -180,12 +181,15 @@ router.post("/accountsettings", async (req, res) => {
     }
 
     // remove user from own messages, but don't delete them
-    const usersMessages = await Message.updateMany({author: foundUser._id}, {$unset: {author: "", text: "-"}, $pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
+    const usersMessages = await Message.updateMany({author: foundUser._id}, {$unset: {author: ""}, $pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
     console.log("Test 1 - ", usersMessages)
 
     // remove user from other peoples messages
     const otherPeoplesMessages = await Message.updateMany({$or: [{readBy: {$in: foundUser._id}, sendTo: {$in: foundUser._id}}]}, {$pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
     console.log("Test 2 - ", otherPeoplesMessages)
+
+    // remove user from own comments, but don't delete them
+    await Comment.updateMany({author: foundUser._id}, {$unset: {author: ""}}, {new: true}).then(()=> console.log("User deleted from own comments.")).catch((err) => console.log("Couldn't delete user from comments: ", err))
 
     res.status(200).json({
       message: "User is deleted!"
