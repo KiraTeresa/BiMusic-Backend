@@ -10,14 +10,14 @@ const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
 const Chat = require("../models/Chat.model.js");
 const Comment = require("../models/Comment.model")
+const jwt = require("jsonwebtoken");
 
-router.post("/", async (req, res) => {
+// get user info
+router.get("/:username", async (req, res) => {
   try {
-    const email = req.body.email;
-    console.log(email);
+    const {username} = req.params;
     const userInfo = await User.findOne({
-      email: email
-    }, "-password"); //Exclude password
+      name: username}, "-password").populate("collabProjects ownProjects samples"); //Exclude password
     console.log(userInfo)
     if (!userInfo) throw createError.NotFound();
     res.status(200).json(userInfo)
@@ -26,20 +26,19 @@ router.post("/", async (req, res) => {
   }
 });
 
+// router.get("/addedproject/:id", async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const projectInfo = await Project.find({
+//       initiator: id
+//     });
+//     console.log(projectInfo)
+//     if (!projectInfo) throw createError.NotFound();
+//     res.status(200).json(projectInfo);
+//   } catch (err) {
 
-router.get("/addedproject/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const projectInfo = await Project.find({
-      initiator: id
-    });
-    console.log(projectInfo)
-    if (!projectInfo) throw createError.NotFound();
-    res.status(200).json(projectInfo);
-  } catch (err) {
-
-  }
-});
+//   }
+// });
 
 //Router for updating user info
 router.put("/editinfo", async (req, res) => {
@@ -51,22 +50,45 @@ router.put("/editinfo", async (req, res) => {
       aboutMe,
       email
     } = req.body;
+
     if (!email) throw createError.NotAcceptable();
-    const userInfo = await User.findOneAndUpdate({
-      email
-    }, {
-      name,
-      city,
-      country,
-      aboutMe
-    }, {
-      new: true
+
+    const nameTaken = await User.findOne({name})
+    
+    if(nameTaken){
+      res.status(400).json({message: "Username already taken"})
+    }
+    
+    await User.findOneAndUpdate({
+        email
+      }, {
+        name: name.toLowerCase(),
+        city,
+        country,
+        aboutMe
+      }, {
+        new: true
+      }).then((updatedUser) => {
+        if(updatedUser){
+
+          const { _id, name, email } = updatedUser;
+          
+          // Create an object that will be set as the token payload
+          const payload = { _id, name, email };
+          
+          // Create a new JSON Web Token
+          const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
+            algorithm: "HS256",
+            expiresIn: "6h",
+          });
+          console.log("Token?? ", authToken)
+          // Send the token as the response
+          res.status(200).json({ user: updatedUser, authToken: authToken });
+        } else {
+          res.status(400).json({message: "User not found"})
+        }
     });
-    if (!userInfo) throw createError.NotFound();
-    console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+
   } catch (err) {
     console.log(err)
     res.json(err);
@@ -158,21 +180,5 @@ router.put("/uploadavatar", async (req, res) => {
     res.json(err);
   }
 });
-
-router.get("/collaboratedprojects/:id", async (req, res) => {
-  try {
-    if (!req.params) throw createError.NotAcceptable();
-    const id = req.params.id;
-    const collaboratedProjects = await Project.find({
-      collaborators: id
-    });
-    if (!collaboratedProjects) throw createError.NotFound();
-    console.log(collaboratedProjects);
-    res.status(200).json(collaboratedProjects)
-  } catch (err) {
-    console.log(err)
-    res.json(err);
-  }
-})
 
 module.exports = router;

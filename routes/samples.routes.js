@@ -9,7 +9,7 @@ const createError = require("http-errors");
 // all samples route
 router.get("/", async (req, res) => {
     try {
-        const result = await Sample.find();
+        const result = await Sample.find().populate("artist");
         res.json(result);
     } catch (err) {
         console.log("ERROR getting data from db ", err)
@@ -113,6 +113,7 @@ router.post("/create", async (req, res) => {
     }).catch((err) => console.log("Something went wrong when adding a new sample.", err))
 })
 
+// get all samples of user
 router.get("/:id", async (req, res) => {
     try {
         const {
@@ -130,12 +131,15 @@ router.get("/:id", async (req, res) => {
     }
 })
 
+// get sample detail page
 router.get("/sample/:id", async (req, res) => {
     try {
         const {
             id
         } = req.params;
-        const result = await Sample.findById(id);
+        const result = await Sample.findById(id).populate("artist").populate({path: 'feedback', populate: {
+            path: 'author'}
+        });
         if (!result) {
             res.json([])
         }

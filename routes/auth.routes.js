@@ -18,7 +18,8 @@ const saltRounds = 10;
 
 // POST /auth/signup  - Creates a new user in the database
 router.post("/signup", (req, res, next) => {
-  const { email, password, name, city, country, aboutMe, skillArr:skills } = req.body;
+  const { email, password, username, city, country, aboutMe, skillArr:skills } = req.body;
+  const name = username.toLowerCase()
 
   // Check if email or password or name are provided as empty strings
   if (email === "" || password === "" || name === "") {
@@ -49,7 +50,7 @@ router.post("/signup", (req, res, next) => {
   }
 
   // Check the users collection if a user with the same email already exists
-  User.findOne({ email })
+  User.findOne({$or: [{email}, {name}] })
     .then((foundUser) => {
       // If the user with the same email already exists, send an error response
       if (foundUser) {
@@ -104,10 +105,10 @@ router.post("/login", (req, res, next) => {
 
       if (passwordCorrect) {
         // Deconstruct the user object to omit the password
-        const { _id, email, name, city, country,aboutMe, skills} = foundUser;
+        const { _id, name, email } = foundUser;
 
         // Create an object that will be set as the token payload
-        const payload = { _id, email, name, city, country,aboutMe,skills };
+        const payload = { _id, name, email };
 
         // Create a JSON Web Token and sign it
         const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
