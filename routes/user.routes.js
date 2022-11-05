@@ -22,11 +22,14 @@ router.get("/:id", async (req, res) => {
 
 // updates user status, gets requested on logout
 router.put("/:userId", isLoggedIn, async (req, res) => {
-  const {userId} = req.params
-  await User.findByIdAndUpdate(userId, {status: "offline"}, {new: true}).then(() => res.json("Server successfully set user status to offline.")).catch((err)=>console.log("Updating user status did not work. ", err))
+  const {
+    userId
+  } = req.params
+  await User.findByIdAndUpdate(userId, {
+    status: "offline"
+  }, {
+    new: true
+  }).then(() => res.json("Server successfully set user status to offline.")).catch((err) => console.log("Updating user status did not work. ", err))
 })
-
-
-
 
 module.exports = router;

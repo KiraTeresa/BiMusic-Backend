@@ -130,6 +130,20 @@ router.get("/:id", async (req, res) => {
     }
 })
 
+router.get("/sample/:id", async (req, res) => {
+    try {
+        const {
+            id
+        } = req.params;
+        const result = await Sample.findById(id);
+        if (!result) {
+            res.json([])
+        }
+        res.status(200).json(result);
+    } catch (e) {
+        console.log(e);
+    }
+})
 
 router.delete("/:id", async (req, res) => {
     try {
