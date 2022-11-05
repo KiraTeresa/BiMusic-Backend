@@ -9,6 +9,7 @@ const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
 const Chat = require("../models/Chat.model.js");
+const Comment = require("../models/Comment.model")
 
 router.post("/", async (req, res) => {
   try {

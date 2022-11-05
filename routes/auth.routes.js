@@ -43,6 +43,11 @@ router.post("/signup", (req, res, next) => {
     return;
   }
 
+  // Check if country and city are provided
+  if (country === "" || city === ""){
+    return res.status(400).json({message: "Please select your country and city."})
+  }
+
   // Check the users collection if a user with the same email already exists
   User.findOne({ email })
     .then((foundUser) => {
