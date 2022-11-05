@@ -36,6 +36,9 @@ app.use("/initiator", userRoutes)
 const commentRoutes = require("./routes/comment.routes")
 app.use("/comment", commentRoutes)
 
+const feedbackRoutes = require("./routes/feedback.routes")
+app.use("/feedback", feedbackRoutes)
+
 const chatRoutes = require("./routes/chat.routes")
 app.use("/chats", chatRoutes)
 
