@@ -35,20 +35,28 @@ router.get("/", isLoggedIn, async (req,res) => {
                 })
             }
         })
-    }).then(() => res.status(200).json({allProjects, existingChats})).catch((err) => console.log("ERRor: ", err))
+    }).then(() => res.status(200).json({allProjects, existingChats})).catch((err) => res.status(500).json({message: "Error occured when trying to load chat list.", err}))
 })
 
 // create new chat room
 router.post("/", isLoggedIn, async (req, res) => {
     const {newChat} = req.body
+    const currentUser = req.user
+
+    // check if user is initiator of this project:
+    const isInitiator = await Project.findOne({$and: [{_id: newChat}, {initiator: {$in: currentUser}}]})
+
+    if(!isInitiator){
+        res.status(400).json({message: "You need to be the initiator of the project in order to create the chat room."})
+    }
 
     // check if user sent valid input:
     if(Object.keys(newChat).length !== 0){
-        await Chat.findOne({project: Types.ObjectId(req.body.newChat)}).then(async (chatFound) => {
+        await Chat.findOne({project: Types.ObjectId(newChat)}).then(async (chatFound) => {
             if(chatFound){
                 res.status(400).json({message: "The chat for this project already exists."})
             } else {
-                await (await Chat.create({project: Types.ObjectId(req.body.newChat)})).populate('project').then((chat) => {
+                await (await Chat.create({project: Types.ObjectId(newChat)})).populate('project').then((chat) => {
                     res.status(200).json(chat)
                 })
             }
@@ -75,6 +83,11 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
         const isInitiator = initiator.equals(currentUser)
         const isCollab = collaborators.find((element) => element.equals(currentUser))
 
+        if (!isInitiator && !isCollab){
+            res.status(400).json({ message: "You need to be a collaborator in order to join the chat." })
+            return
+        }
+
         // get only message history since user is part of the chat:
         const usersHistory = []
         
@@ -99,15 +112,11 @@ router.get("/:chatId", isLoggedIn, async (req, res) => {
                 }
             }
         })
-        // console.log("USER HISTORY ", usersHistory)
 
         if (isInitiator || isCollab){
             res.json({chatFound, usersHistory})
-        } else {
-            res.status(400).json({ message: "You need to be a collaborator in order to join the chat." })
-            return
         }
-    }).catch((err) => console.log("Error when finding the chat data ", err))
+    }).catch((err) => res.status(500).json({message: "Error when finding the chat data ", err}))
 })
 
 module.exports = router

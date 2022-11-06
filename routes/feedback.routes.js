@@ -17,8 +17,8 @@ router.post("/:sampleId", isLoggedIn, async (req, res) => {
     await Feedback.create({title, text, author: req.user, sample: Types.ObjectId(sampleId)}).then(async (result) => {
 
         // add feedback to sample:
-        await Sample.findByIdAndUpdate(sampleId, {"$push": {feedback: result}}, {"new": true}).then(() => res.json("Done adding the feedback."))
-    }).catch((err) => console.log("Error occured when adding a feedback.", err))
+        await Sample.findByIdAndUpdate(sampleId, {"$push": {feedback: result}}, {"new": true}).then(() => res.status(200).json("Feedback successfully added"))
+    }).catch((err) => res.status(500).json({message: "Please try again", err}))
 })
 
 module.exports = router;

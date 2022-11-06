@@ -46,8 +46,6 @@ router.post("/", isLoggedIn, async (req, res) => {
     password
   } = req.body;
   try {
-    console.log("HEREEEE--->", email, password);
-    console.log("REQ ", req.body)
     if (!email || !password){
       res.status(400).json({message: "please provide email and password"})
     };
@@ -163,6 +161,7 @@ router.post("/", isLoggedIn, async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+    res.status(500).json(err)
   }
 });
 
@@ -190,7 +189,9 @@ router.put("/", isLoggedIn, async (req, res, next) => {
     const foundUser = await User.findOne({
       email
     });
-    if (!foundUser) throw createError.NotFound("User not found.")
+    if (!foundUser) {
+      res.status(400).json({message: "User not found"})
+    }
 
     // Compare the provided password with the one saved in the database
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);

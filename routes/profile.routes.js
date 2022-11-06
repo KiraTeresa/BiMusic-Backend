@@ -17,10 +17,12 @@ router.get("/:username", isLoggedIn, async (req, res) => {
     const userInfo = await User.findOne({
       name: username}, "-password").populate("collabProjects ownProjects samples"); //Exclude password
     console.log(userInfo)
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     res.status(200).json(userInfo)
   } catch (err) {
-    console.log(err)
+    res.status(500).json(err)
   }
 });
 
@@ -35,7 +37,9 @@ router.put("/editinfo", isLoggedIn, async (req, res) => {
       email
     } = req.body;
 
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
 
     const nameTaken = await User.findOne({name})
     
@@ -75,7 +79,7 @@ router.put("/editinfo", isLoggedIn, async (req, res) => {
 
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
@@ -87,7 +91,9 @@ router.put("/editskill", isLoggedIn, async (req, res) => {
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -99,14 +105,14 @@ router.put("/editskill", isLoggedIn, async (req, res) => {
     });
 
     //Add new skill if it doesn't exist in the array (current skillset)
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
@@ -119,7 +125,9 @@ router.put("/deleteskill", isLoggedIn, async (req, res) => {
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -128,14 +136,14 @@ router.put("/deleteskill", isLoggedIn, async (req, res) => {
       }
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
@@ -146,7 +154,9 @@ router.put("/uploadavatar", isLoggedIn, async (req, res) => {
       avatar,
       cloudinary_id
     } = req.body
-    if (!req.body) throw createError.NotAcceptable();
+    if (!req.body){
+      res.status(400).json({message: "No valid input"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -154,14 +164,16 @@ router.put("/uploadavatar", isLoggedIn, async (req, res) => {
       cloudinary_id
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
     res.status(200).json({
       message: "Data updated successfulyy!"
     })
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
