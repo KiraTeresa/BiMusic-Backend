@@ -5,9 +5,10 @@ const Project = require('../models/Project.model');
 const Sample = require('../models/Sample.model');
 const User = require('../models/User.model');
 const createError = require("http-errors");
+const isLoggedIn = require('../middleware/isLoggedIn')
 
 // all samples route
-router.get("/", async (req, res) => {
+router.get("/", isLoggedIn, async (req, res) => {
     try {
         const result = await Sample.find().populate("artist");
         res.json(result);
@@ -16,7 +17,7 @@ router.get("/", async (req, res) => {
     }
 })
 
-router.get("/create", async (req, res) => {
+router.get("/create", isLoggedIn, async (req, res) => {
     console.log("REQ SAMPLE CREATE: ", req.query)
     const {
         projectId
@@ -28,7 +29,7 @@ router.get("/create", async (req, res) => {
     }
 })
 
-router.post("/create", async (req, res) => {
+router.post("/create", isLoggedIn, async (req, res) => {
     console.log("BODY: ", req.body)
     const {
         finalForm,
@@ -114,7 +115,7 @@ router.post("/create", async (req, res) => {
 })
 
 // get all samples of user
-router.get("/:id", async (req, res) => {
+router.get("/:id", isLoggedIn, async (req, res) => {
     try {
         const {
             id
@@ -132,7 +133,7 @@ router.get("/:id", async (req, res) => {
 })
 
 // get sample detail page
-router.get("/sample/:id", async (req, res) => {
+router.get("/sample/:id", isLoggedIn, async (req, res) => {
     try {
         const {
             id
@@ -149,7 +150,7 @@ router.get("/sample/:id", async (req, res) => {
     }
 })
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isLoggedIn, async (req, res) => {
     try {
         const {
             id

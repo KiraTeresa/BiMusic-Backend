@@ -3,8 +3,6 @@ const router = express.Router();
 const User = require("../models/User.model.js");
 const saltRounds = 10;
 const createError = require("http-errors");
-const Project = require("../models/Project.model.js");
-const Sample = require("../models/Sample.model.js")
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
@@ -13,7 +11,7 @@ const Comment = require("../models/Comment.model")
 const jwt = require("jsonwebtoken");
 
 // get user info
-router.get("/:username", async (req, res) => {
+router.get("/:username", isLoggedIn, async (req, res) => {
   try {
     const {username} = req.params;
     const userInfo = await User.findOne({
@@ -26,22 +24,8 @@ router.get("/:username", async (req, res) => {
   }
 });
 
-// router.get("/addedproject/:id", async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     const projectInfo = await Project.find({
-//       initiator: id
-//     });
-//     console.log(projectInfo)
-//     if (!projectInfo) throw createError.NotFound();
-//     res.status(200).json(projectInfo);
-//   } catch (err) {
-
-//   }
-// });
-
 //Router for updating user info
-router.put("/editinfo", async (req, res) => {
+router.put("/editinfo", isLoggedIn, async (req, res) => {
   try {
     const {
       name,
@@ -96,7 +80,7 @@ router.put("/editinfo", async (req, res) => {
 });
 
 //Router for updating skill update
-router.put("/editskill", async (req, res) => {
+router.put("/editskill", isLoggedIn, async (req, res) => {
   try {
     const {
       skill,
@@ -128,7 +112,7 @@ router.put("/editskill", async (req, res) => {
 
 
 //Delete skillx
-router.put("/deleteskill", async (req, res) => {
+router.put("/deleteskill", isLoggedIn, async (req, res) => {
   try {
     const {
       skill,
@@ -155,7 +139,7 @@ router.put("/deleteskill", async (req, res) => {
   }
 });
 
-router.put("/uploadavatar", async (req, res) => {
+router.put("/uploadavatar", isLoggedIn, async (req, res) => {
   try {
     const {
       email,
