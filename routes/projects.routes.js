@@ -9,8 +9,11 @@ const Chat = require('../models/Chat.model');
 const Message = require('../models/Message.model');
 
 // all projects page
-router.get("/", (req, res) => {
-    Project.find().populate("initiator").then((result) => {res.json(result)}).catch(err => console.log("ERROR getting data from db ", err))
+router.get("/", async (req, res) => {
+    await Project.find().populate("initiator").then((result) => {res.status(200).json(result)}).catch(err => {
+        console.log("ERROR getting data from db ", err)
+        res.status(500).json(err)
+    })
 })
 
 // get project form
@@ -18,8 +21,8 @@ router.get("/create", isLoggedIn,async (req, res) => {
     const {userId} = req.query
     await User.findById(userId).then((user) => {
         const {country, city} = user
-        res.json({country, city})
-    }).catch(console.error)
+        res.status(200).json({country, city})
+    }).catch((err) => res.status(500).json(err))
 })
 
 // Add new project
@@ -59,8 +62,11 @@ router.post("/create", isLoggedIn,async (req, res) => {
     await Project.create({...req.body, initiator: user}).then(async (newProject) => {
         await User.findByIdAndUpdate(user, {$push: {ownProjects: newProject._id}}, {"new": true}).then(()=> console.log("Added new project to users ownProject array."))
 
-        res.json(newProject._id)
-    }).catch((err) => console.log("Something went wrong when creating a new project.", err))
+        res.status(200).json(newProject._id)
+    }).catch((err) => {
+        console.log("Something went wrong when creating a new project.", err)
+        res.status(500).json(err)
+    })
 })
 
 // single project page
@@ -79,7 +85,10 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
             userStatus.alreadyCollab = true;
             projectData = project
         }
-    }).catch((err) => console.log("in alreadyCollab", err))
+    }).catch((err) => {
+        console.log("in alreadyCollab", err)
+        res.status(500).json(err)
+    })
 
     // checks, if current user is already waiting to become a collaborator:
     if(!userStatus.alreadyCollab){
@@ -91,7 +100,10 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
                 userStatus.alreadyPending = true;
                 projectData = project
             }
-        }).catch((err) => console.log("in pendingCollab", err))
+        }).catch((err) => {
+            console.log("in pendingCollab", err)
+            res.status(500).json(err)
+        })
     }
 
     // checks, if current user is the initiator of this project:
@@ -104,7 +116,10 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
                 userStatus.isInitiator = true;
                 projectData = project
             }
-        }).catch((err) => console.log("in initiator", err))
+        }).catch((err) => {
+            console.log("in initiator", err)
+            res.status(500).json(err)
+        })
     }
 
     // if none of the above applies, this code will be executed:
@@ -113,12 +128,15 @@ router.get('/:projectId', isLoggedIn,async (req, res) => {
             path: 'author'}
         }).then((project) => {
             projectData = project;
-        }).catch((err) => console.log("Fetching the project details failed, ", err))
+        }).catch((err) => {
+            console.log("Fetching the project details failed, ", err)
+            res.status(500).json(err)
+        })
     }
 
     console.log(`Collab: ${userStatus.alreadyCollab}, Pending: ${userStatus.alreadyPending}, Initiator: ${userStatus.isInitiator}`)
 
-    res.json({project: projectData, aUserStatus: userStatus})
+    res.status(200).json({project: projectData, aUserStatus: userStatus})
 })
 
 // delete a project
@@ -149,7 +167,7 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
             await User.findByIdAndUpdate(currentUser, {"$pull": {"ownProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Removed project from initiator.")).catch((err) => console.log("ERROR while trying to pull project from initiator. ", err))
 
         } else {
-            res.json("You are not the initiator, you cannot delete this project.")
+            res.status(400).json({message: "You are not the initiator, you cannot delete this project."})
         }
     }).then(async () => {
         
@@ -184,10 +202,10 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
 
         if(alreadyCollab){
             // remove user from project
-            await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed user from project collaborators"))
+            await Project.findByIdAndUpdate(projectId, {"$pull": {"collaborators": Types.ObjectId(userId)}}, {"new": true}).then(() => res.status(200).json("Removed user from project collaborators"))
 
             // remove project from user
-            await User.findByIdAndUpdate(userId, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => res.json("Removed from users collabProjects"))
+            await User.findByIdAndUpdate(userId, {"$pull": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => res.status(200).json("Removed from users collabProjects"))
         }
 
         // Check if already pending:
@@ -198,39 +216,64 @@ router.post('/:projectId/:userId', isLoggedIn,async (req, res) => {
 
         if(alreadyPending){
             // remove user from pending list
-            await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => res.json("Removed from pending"))
+            await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => res.status(200).json("Removed from pending"))
         }
 
         if(!alreadyCollab && !alreadyPending && !isInitiator){
             // add user to pending list
             await Project.findByIdAndUpdate(projectId, {"$push": {"pendingCollabs": Types.ObjectId(userId)}}, {"new": true}).then(() => {
-            res.json(`-- Added user to pending list --`)
+            res.status(200).json(`-- Added user to pending list --`)
             })
         }
-    }).catch((err) => console.log("ERR ", err))
+    }).catch((err) => {
+        console.log("ERR ", err)
+        res.status(500).json(err)
+    })
 })
 
 // accepting user request
 router.post('/:projectId/:requestingUserId/accept', isLoggedIn,async (req, res) => {
     const {projectId, requestingUserId} = req.params;
+    const currentUser = req.user
+
+    // check if current user is initiator
+    const isInitiator = await Project.findOne({$and: [{_id: projectId}, {initiator: currentUser}]})
+
+    if(!isInitiator){
+        res.status(400).json({message: "You are not the initiator of this project."})
+        return
+    }
 
     // add to collaborator array:
     await Project.findByIdAndUpdate(projectId, {"$push": {"collaborators": Types.ObjectId(requestingUserId)}}, {"new": true}).then(async () => {
         
         // remove from pending list:
-        await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(()=> res.json("yeah yeah, user request is taken care of.")).catch((err) => console.log("ErroR: ", err))
+        await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(()=> res.status(200).json("User request is taken care of."))
 
         // add project to users collabProjects array
-        await User.findByIdAndUpdate(requestingUserId, {"$push": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Added project to users collabProjects array.")).catch((err) => console.log("Error: ", err))
+        await User.findByIdAndUpdate(requestingUserId, {"$push": {"collabProjects": Types.ObjectId(projectId)}}, {"new": true}).then(() => console.log("Added project to users collabProjects array."))
+    }).catch((err) => {
+        res.status(500).json(err)
     })
 })
 
 // rejecting user request
 router.post('/:projectId/:requestingUserId/reject', isLoggedIn,async (req, res) => {
     const {projectId, requestingUserId} = req.params;
+    const currentUser = req.user
+
+    // check if current user is initiator
+    const isInitiator = await Project.findOne({$and: [{_id: projectId}, {initiator: currentUser}]})
+
+    if(!isInitiator){
+        res.status(400).json({message: "You are not the initiator of this project."})
+        return
+    }
 
     // remove from pending list:
-    await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(() => res.json("Backend took care of the rejection, you got a clean plate")).catch((err) => console.log("ErroR: ", err))
+    await Project.findByIdAndUpdate(projectId, {"$pull": {"pendingCollabs": Types.ObjectId(requestingUserId)}}, {"new": true}).then(() => res.status(200).json("Backend took care of the rejection, you got a clean plate")).catch((err) => {
+        res.status(500).json(err)
+    })
 
 })
 

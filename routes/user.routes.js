@@ -11,7 +11,7 @@ const isLoggedIn = require("../middleware/isLoggedIn")
 const createError = require("http-errors");
 const bcrypt = require("bcrypt");
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", isLoggedIn, async (req, res) => {
   try {
     const {
       id
@@ -39,15 +39,13 @@ router.put("/:userId", isLoggedIn, async (req, res) => {
   }).then(() => res.json("Server successfully set user status to offline.")).catch((err) => console.log("Updating user status did not work. ", err))
 })
 
-//Delete Account from account settting (this router will ne removed to seperate router file)
-router.post("/", async (req, res) => {
+//Delete Account from account settting
+router.post("/", isLoggedIn, async (req, res) => {
   const {
     email,
     password
   } = req.body;
   try {
-    console.log("HEREEEE--->", email, password);
-    console.log("REQ ", req.body)
     if (!email || !password){
       res.status(400).json({message: "please provide email and password"})
     };
@@ -163,10 +161,11 @@ router.post("/", async (req, res) => {
     });
   } catch (err) {
     console.log(err);
+    res.status(500).json(err)
   }
 });
 
-router.put("/", async (req, res, next) => {
+router.put("/", isLoggedIn, async (req, res, next) => {
   try {
     const {
       email,
@@ -190,7 +189,9 @@ router.put("/", async (req, res, next) => {
     const foundUser = await User.findOne({
       email
     });
-    if (!foundUser) throw createError.NotFound("User not found.")
+    if (!foundUser) {
+      res.status(400).json({message: "User not found"})
+    }
 
     // Compare the provided password with the one saved in the database
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);

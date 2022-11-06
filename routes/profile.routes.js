@@ -3,8 +3,6 @@ const router = express.Router();
 const User = require("../models/User.model.js");
 const saltRounds = 10;
 const createError = require("http-errors");
-const Project = require("../models/Project.model.js");
-const Sample = require("../models/Sample.model.js")
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
@@ -13,35 +11,23 @@ const Comment = require("../models/Comment.model")
 const jwt = require("jsonwebtoken");
 
 // get user info
-router.get("/:username", async (req, res) => {
+router.get("/:username", isLoggedIn, async (req, res) => {
   try {
     const {username} = req.params;
     const userInfo = await User.findOne({
       name: username}, "-password").populate("collabProjects ownProjects samples"); //Exclude password
     console.log(userInfo)
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     res.status(200).json(userInfo)
   } catch (err) {
-    console.log(err)
+    res.status(500).json(err)
   }
 });
 
-// router.get("/addedproject/:id", async (req, res) => {
-//   try {
-//     const id = req.params.id;
-//     const projectInfo = await Project.find({
-//       initiator: id
-//     });
-//     console.log(projectInfo)
-//     if (!projectInfo) throw createError.NotFound();
-//     res.status(200).json(projectInfo);
-//   } catch (err) {
-
-//   }
-// });
-
 //Router for updating user info
-router.put("/editinfo", async (req, res) => {
+router.put("/editinfo", isLoggedIn, async (req, res) => {
   try {
     const {
       name,
@@ -51,7 +37,9 @@ router.put("/editinfo", async (req, res) => {
       email
     } = req.body;
 
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
 
     const nameTaken = await User.findOne({name})
     
@@ -91,19 +79,21 @@ router.put("/editinfo", async (req, res) => {
 
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
 //Router for updating skill update
-router.put("/editskill", async (req, res) => {
+router.put("/editskill", isLoggedIn, async (req, res) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -115,27 +105,29 @@ router.put("/editskill", async (req, res) => {
     });
 
     //Add new skill if it doesn't exist in the array (current skillset)
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
 
 //Delete skillx
-router.put("/deleteskill", async (req, res) => {
+router.put("/deleteskill", isLoggedIn, async (req, res) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email){
+      res.status(400).json({message: "Not authorized"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -144,25 +136,27 @@ router.put("/deleteskill", async (req, res) => {
       }
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 
-router.put("/uploadavatar", async (req, res) => {
+router.put("/uploadavatar", isLoggedIn, async (req, res) => {
   try {
     const {
       email,
       avatar,
       cloudinary_id
     } = req.body
-    if (!req.body) throw createError.NotAcceptable();
+    if (!req.body){
+      res.status(400).json({message: "No valid input"})
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -170,14 +164,16 @@ router.put("/uploadavatar", async (req, res) => {
       cloudinary_id
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo){
+      res.status(400).json({message: "User not found"})
+    }
     console.log(userInfo);
     res.status(200).json({
       message: "Data updated successfulyy!"
     })
   } catch (err) {
     console.log(err)
-    res.json(err);
+    res.status(500).json(err);
   }
 });
 

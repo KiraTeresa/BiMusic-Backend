@@ -5,30 +5,33 @@ const Project = require('../models/Project.model');
 const Sample = require('../models/Sample.model');
 const User = require('../models/User.model');
 const createError = require("http-errors");
+const isLoggedIn = require('../middleware/isLoggedIn')
 
 // all samples route
-router.get("/", async (req, res) => {
+router.get("/", isLoggedIn, async (req, res) => {
     try {
         const result = await Sample.find().populate("artist");
-        res.json(result);
+        res.status(200).json(result);
     } catch (err) {
         console.log("ERROR getting data from db ", err)
+        res.status(500).json(err)
     }
 })
 
-router.get("/create", async (req, res) => {
-    console.log("REQ SAMPLE CREATE: ", req.query)
+router.get("/create", isLoggedIn, async (req, res) => {
+    // console.log("REQ SAMPLE CREATE: ", req.query)
     const {
         projectId
     } = req.query
     if (projectId) {
-        await Project.findById(projectId).populate('initiator').then((project) => res.json(project)).catch(err => console.log(err))
-    } else {
-        res.json("Hello from Backend")
+        await Project.findById(projectId).populate('initiator').then((project) => res.status(200).json(project)).catch(err => {
+            console.log(err)
+            res.status(500).json(err)
+        })
     }
 })
 
-router.post("/create", async (req, res) => {
+router.post("/create", isLoggedIn, async (req, res) => {
     console.log("BODY: ", req.body)
     const {
         finalForm,
@@ -71,7 +74,7 @@ router.post("/create", async (req, res) => {
     // Validation: link type
     if (linkType !== "url" && linkType !== "upload") {
         res.status(400).json({
-            message: "Link type 'audio' or 'video' must me checked"
+            message: "Upload type must be selected."
         });
         return;
     }
@@ -109,30 +112,33 @@ router.post("/create", async (req, res) => {
         }
 
         console.log("Successfully added a sample")
-        res.json("Backend done with adding new sample.")
-    }).catch((err) => console.log("Something went wrong when adding a new sample.", err))
+        res.status(200).json("Backend done with adding new sample.")
+    }).catch((err) => {
+        console.log("Something went wrong when adding a new sample.", err)
+        res.status(500).json(err)
+    })
 })
 
 // get all samples of user
-router.get("/:id", async (req, res) => {
-    try {
-        const {
-            id
-        } = req.params;
-        const result = await Sample.find({
-            artist: id
-        });
-        if (!result) {
-            res.json([])
-        }
-        res.status(200).json(result);
-    } catch (e) {
-        console.log(e);
-    }
-})
+// router.get("/:id", isLoggedIn, async (req, res) => {
+//     try {
+//         const {
+//             id
+//         } = req.params;
+//         const result = await Sample.find({
+//             artist: id
+//         });
+//         if (!result) {
+//             res.json([])
+//         }
+//         res.status(200).json(result);
+//     } catch (e) {
+//         console.log(e);
+//     }
+// })
 
 // get sample detail page
-router.get("/sample/:id", async (req, res) => {
+router.get("/sample/:id", isLoggedIn, async (req, res) => {
     try {
         const {
             id
@@ -141,27 +147,30 @@ router.get("/sample/:id", async (req, res) => {
             path: 'author'}
         });
         if (!result) {
-            res.json([])
+            res.status(400).json({message: "Sample not found"})
         }
         res.status(200).json(result);
-    } catch (e) {
-        console.log(e);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json(err)
     }
 })
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", isLoggedIn, async (req, res) => {
     try {
         const {
             id
         } = req.params;
         const userSample = await Sample.findByIdAndDelete(id);
-        if (!userSample) throw createError.NotFound();
+        if (!userSample){
+            res.status(400).json({message: "Sample not found"})
+        }
         res.status(200).json({
             message: "Sample deleted successfulyy!",
         })
     } catch (err) {
         console.log(err)
-        res.json(err);
+        res.status(500).json(err);
     }
 });
 

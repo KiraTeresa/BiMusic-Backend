@@ -17,8 +17,8 @@ router.post("/:projectId", isLoggedIn, async (req, res) => {
     await Comment.create({text, author: req.user, project: Types.ObjectId(projectId)}).then(async (result) => {
 
         // add comment to project:
-        await Project.findByIdAndUpdate(projectId, {"$push": {comments: result}}, {"new": true}).then(() => res.json("Done adding the comment."))
-    }).catch((err) => console.log("Error occured when adding a comment.", err))
+        await Project.findByIdAndUpdate(projectId, {"$push": {comments: result}}, {"new": true}).then(() => res.json("Comment successfully added."))
+    }).catch((err) => res.status(500).json({message: "Please try again", err}))
 })
 
 module.exports = router;
