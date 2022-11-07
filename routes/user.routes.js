@@ -10,6 +10,14 @@ const Comment = require("../models/Comment.model")
 const isLoggedIn = require("../middleware/isLoggedIn")
 const createError = require("http-errors");
 const bcrypt = require("bcrypt");
+const cloudinary = require('cloudinary');
+
+cloudinary.config({
+  cloud_name: 'df7tgkzf9',
+  api_key: '599894967481117',
+  api_secret: '4zXV-CVgioJ3IW0kiMpVrOIOYXY',
+  secure: true
+});
 
 router.get("/:id", isLoggedIn, async (req, res) => {
   try {
@@ -40,28 +48,39 @@ router.put("/:userId", isLoggedIn, async (req, res) => {
 })
 
 //Delete Account from account settting
-router.post("/", isLoggedIn, async (req, res) => {
+router.post("/", isLoggedIn, async (req, res, next) => {
   const {
     email,
     password
   } = req.body;
   try {
-    if (!email || !password){
-      res.status(400).json({message: "please provide email and password"})
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "please provide email and password"
+      })
     };
     // Check the users collection if a user with the same email exists
     const foundUser = await User.findOne({
       email
     });
-    if (!foundUser){
-      res.status(400).json({message: "User not found"})
+    if (!foundUser) {
+      return res.status(400).json({
+        message: "User not found"
+      })
     }
     // Compare the provided password with the one saved in the database
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);
 
-    if (!passwordCorrect){
-      res.status(400).json({message: "password incorrect"})
+    if (!passwordCorrect) {
+      return res.status(400).json({
+        message: "password incorrect"
+      })
     };
+
+    // Delete User image from cloudinary
+    cloudinary.v2.uploader.destroy(foundUser.cloudinary_id, function (error, result) {
+      console.log(result, error)
+    });
 
     // get all projects which are going to be deleted; needed to also delete chats
     const deletedProject = await Project.find({
@@ -73,14 +92,42 @@ router.post("/", isLoggedIn, async (req, res) => {
     });
 
     // remove from all collab projects
-    await Project.updateMany({collaborators: {$in: foundUser._id}}, {$pull: {
-      collaborators: foundUser._id
-    }}, {new: true})
-   
+    await Project.updateMany({
+      collaborators: {
+        $in: foundUser._id
+      }
+    }, {
+      $pull: {
+        collaborators: foundUser._id
+      }
+    }, {
+      new: true
+    })
+
     // remove from all project pending lists
-    await Project.updateMany({pendingCollabs: {$in: foundUser._id}}, {$pull: {
-      pendingCollabs: foundUser._id
-    }}, {new: true})
+    await Project.updateMany({
+      pendingCollabs: {
+        $in: foundUser._id
+      }
+    }, {
+      $pull: {
+        pendingCollabs: foundUser._id
+      }
+    }, {
+      new: true
+    })
+
+    //Delete samples from the cloudinary id.
+    const foundSamples = await Sample.find({
+      artist: foundUser._id
+    });
+    const samples = foundSamples.map(sample => {
+      return sample.cloudinary_id
+    })
+    cloudinary.v2.api.delete_resources(samples,
+      function (error, result) {
+        console.log(result);
+      });
 
     await Sample.deleteMany({
       artist: foundUser._id
@@ -124,14 +171,26 @@ router.post("/", isLoggedIn, async (req, res) => {
     })
 
     // remove user from own comments, but don't delete them
-    await Comment.updateMany({author: foundUser._id}, {$unset: {
-      author: ""
-    }}, {new: true})
-    
+    await Comment.updateMany({
+      author: foundUser._id
+    }, {
+      $unset: {
+        author: ""
+      }
+    }, {
+      new: true
+    })
+
     // remove user from own feedback, but don't delete it
-    await Feedback.updateMany({author: foundUser._id}, {$unset: {
-      author: ""
-    }}, {new: true})
+    await Feedback.updateMany({
+      author: foundUser._id
+    }, {
+      $unset: {
+        author: ""
+      }
+    }, {
+      new: true
+    })
 
 
     console.log("Test 1 - ", usersMessages)
@@ -156,12 +215,12 @@ router.post("/", isLoggedIn, async (req, res) => {
     })
     console.log("Test 2 - ", otherPeoplesMessages)
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "User is deleted!"
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json(err)
+    next(err)
   }
 });
 
@@ -175,14 +234,18 @@ router.put("/", isLoggedIn, async (req, res, next) => {
 
     console.log(email, password, changePassword);
 
-    if (!email || !password || !changePassword){
-      res.status(400).json({message: "Email, password and new password are required."})
+    if (!email || !password || !changePassword) {
+      return res.status(400).json({
+        message: "Email, password and new password are required."
+      })
     }
 
     const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
 
-    if (!passwordRegex.test(changePassword)){
-      res.status(400).json({message: "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter."})
+    if (!passwordRegex.test(changePassword)) {
+      return res.status(400).json({
+        message: "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter."
+      })
     }
 
     // Check the users collection if a user with the same email exists
@@ -190,16 +253,20 @@ router.put("/", isLoggedIn, async (req, res, next) => {
       email
     });
     if (!foundUser) {
-      res.status(400).json({message: "User not found"})
+      return res.status(400).json({
+        message: "User not found"
+      })
     }
 
     // Compare the provided password with the one saved in the database
     const passwordCorrect = await bcrypt.compare(password, foundUser.password);
 
-    if (!passwordCorrect){
-      res.status(400).json({message: "Password doesn't match"})
+    if (!passwordCorrect) {
+      return res.status(400).json({
+        message: "Password doesn't match"
+      })
     }
-    
+
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     const hashedPassword = await bcrypt.hash(changePassword, salt);
