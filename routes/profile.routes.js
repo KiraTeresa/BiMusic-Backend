@@ -11,23 +11,25 @@ const Comment = require("../models/Comment.model")
 const jwt = require("jsonwebtoken");
 
 // get user info
-router.get("/:username", isLoggedIn, async (req, res) => {
+router.get("/:username", isLoggedIn, async (req, res, next) => {
   try {
-    const {username} = req.params;
+    const {
+      username
+    } = req.params;
     const userInfo = await User.findOne({
-      name: username}, "-password").populate("collabProjects ownProjects samples"); //Exclude password
-    console.log(userInfo)
-    if (!userInfo){
-      res.status(400).json({message: "User not found"})
+      name: username
+    }, "-password").populate("collabProjects ownProjects samples"); //Exclude password
+    if (!userInfo) {
+      throw createError.NotFound("User Not Found!")
     }
-    res.status(200).json(userInfo)
+    return res.status(200).json(userInfo)
   } catch (err) {
-    res.status(500).json(err)
+    next(err)
   }
 });
 
 //Router for updating user info
-router.put("/editinfo", isLoggedIn, async (req, res) => {
+router.put("/editinfo", isLoggedIn, async (req, res, next) => {
   try {
     const {
       name,
@@ -37,62 +39,81 @@ router.put("/editinfo", isLoggedIn, async (req, res) => {
       email
     } = req.body;
 
-    if (!email){
-      res.status(400).json({message: "Not authorized"})
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
     }
 
-    const nameTaken = await User.findOne({name})
-    
-    if(nameTaken){
-      res.status(400).json({message: "Username already taken"})
+    const nameTaken = await User.findOne({
+      name
+    })
+
+    if (nameTaken) {
+      return res.status(400).json({
+        message: "Username already taken"
+      })
     }
-    
+
     await User.findOneAndUpdate({
-        email
-      }, {
-        name: name.toLowerCase(),
-        city,
-        country,
-        aboutMe
-      }, {
-        new: true
-      }).then((updatedUser) => {
-        if(updatedUser){
+      email
+    }, {
+      name: name.toLowerCase(),
+      city,
+      country,
+      aboutMe
+    }, {
+      new: true
+    }).then((updatedUser) => {
+      if (updatedUser) {
+        const {
+          _id,
+          name,
+          email
+        } = updatedUser;
 
-          const { _id, name, email } = updatedUser;
-          
-          // Create an object that will be set as the token payload
-          const payload = { _id, name, email };
-          
-          // Create a new JSON Web Token
-          const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
-            algorithm: "HS256",
-            expiresIn: "6h",
-          });
-          console.log("Token?? ", authToken)
-          // Send the token as the response
-          res.status(200).json({ user: updatedUser, authToken: authToken });
-        } else {
-          res.status(400).json({message: "User not found"})
-        }
+        // Create an object that will be set as the token payload
+        const payload = {
+          _id,
+          name,
+          email
+        };
+
+        // Create a new JSON Web Token
+        const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
+          algorithm: "HS256",
+          expiresIn: "6h",
+        });
+        console.log("Token?? ", authToken)
+        // Send the token as the response
+        return res.status(200).json({
+          user: updatedUser,
+          authToken: authToken
+        });
+      } else {
+        return res.status(400).json({
+          message: "User not found"
+        })
+      }
     });
 
   } catch (err) {
-    console.log(err)
-    res.status(500).json(err);
+    next(err)
   }
 });
 
 //Router for updating skill update
-router.put("/editskill", isLoggedIn, async (req, res) => {
+router.put("/editskill", isLoggedIn, async (req, res, next) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email){
-      res.status(400).json({message: "Not authorized"})
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
     }
     const userInfo = await User.findOneAndUpdate({
       email
@@ -105,28 +126,32 @@ router.put("/editskill", isLoggedIn, async (req, res) => {
     });
 
     //Add new skill if it doesn't exist in the array (current skillset)
-    if (!userInfo){
-      res.status(400).json({message: "User not found"})
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
     }
     console.log(userInfo);
-    res.status(200).json(userInfo)
+    return res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.status(500).json(err);
+    next(err)
   }
 });
 
 
 //Delete skillx
-router.put("/deleteskill", isLoggedIn, async (req, res) => {
+router.put("/deleteskill", isLoggedIn, async (req, res, next) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email){
-      res.status(400).json({message: "Not authorized"})
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
     }
     const userInfo = await User.findOneAndUpdate({
       email
@@ -136,26 +161,30 @@ router.put("/deleteskill", isLoggedIn, async (req, res) => {
       }
     });
     //It will delete the skill from the array
-    if (!userInfo){
-      res.status(400).json({message: "User not found"})
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
     }
     console.log(userInfo);
-    res.status(200).json(userInfo)
+    return res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.status(500).json(err);
+    next(err)
   }
 });
 
-router.put("/uploadavatar", isLoggedIn, async (req, res) => {
+router.put("/uploadavatar", isLoggedIn, async (req, res, next) => {
   try {
     const {
       email,
       avatar,
       cloudinary_id
     } = req.body
-    if (!req.body){
-      res.status(400).json({message: "No valid input"})
+    if (!req.body) {
+      return res.status(400).json({
+        message: "No valid input"
+      })
     }
     const userInfo = await User.findOneAndUpdate({
       email
@@ -164,16 +193,18 @@ router.put("/uploadavatar", isLoggedIn, async (req, res) => {
       cloudinary_id
     });
     //It will delete the skill from the array
-    if (!userInfo){
-      res.status(400).json({message: "User not found"})
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
     }
     console.log(userInfo);
-    res.status(200).json({
+    return res.status(200).json({
       message: "Data updated successfulyy!"
     })
   } catch (err) {
     console.log(err)
-    res.status(500).json(err);
+    next(err)
   }
 });
 
