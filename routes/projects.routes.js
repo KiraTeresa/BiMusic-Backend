@@ -230,7 +230,8 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
     const {
         projectId
     } = req.params;
-    if(!req.params.projectId){
+    console.log(req.params);
+    if (!req.params.projectId) {
         throw createError.NotFound("Project Not Found");
     }
     const currentUser = req.user;
@@ -280,7 +281,7 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
             }).then(() => console.log("Removed project from initiator.")).catch((err) => console.log("ERROR while trying to pull project from initiator. ", err))
 
         } else {
-            res.status(400).json({
+            return res.status(400).json({
                 message: "You are not the initiator, you cannot delete this project."
             })
         }
@@ -290,16 +291,19 @@ router.post('/:projectId/delete', isLoggedIn, async (req, res) => {
         const deletedChat = await Chat.findOne({
             project: Types.ObjectId(projectId)
         })
+        if (!deletedChat) {
+            return res.status(200).json("Backend deleted the project. Congrats.")
+        }
+        // delete chat messages:
+        await Message.deleteMany({
+            chatId: Types.ObjectId(deletedChat._id)
+        })
+
         await Chat.findOneAndDelete({
             project: Types.ObjectId(projectId)
         })
 
-        // delete chat messages:
-        await Message.deleteMany({
-            chatId: deletedChat._id
-        })
-
-        res.json("Backend deleted the project. Congrats.")
+        return res.status(200).json("Backend deleted the project. Congrats.")
     }).catch((err) => console.log("Delete project did not work.", err))
 })
 
