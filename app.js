@@ -31,10 +31,13 @@ const samplesRoutes = require("./routes/samples.routes")
 app.use("/samples", samplesRoutes)
 
 const userRoutes = require("./routes/user.routes")
-app.use("/initiator", userRoutes)
+app.use("/user", userRoutes)
 
 const commentRoutes = require("./routes/comment.routes")
 app.use("/comment", commentRoutes)
+
+const feedbackRoutes = require("./routes/feedback.routes")
+app.use("/feedback", feedbackRoutes)
 
 const chatRoutes = require("./routes/chat.routes")
 app.use("/chats", chatRoutes)

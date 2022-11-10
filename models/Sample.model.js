@@ -10,6 +10,9 @@ const sampleSchema = new Schema({
   uploadedLink: {
     type: String
   },
+  cloudinary_id: {
+    type: String
+  },
   linkType: {
     type: String,
     required: [true, "LinkType is required."],

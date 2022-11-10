@@ -3,45 +3,33 @@ const router = express.Router();
 const User = require("../models/User.model.js");
 const saltRounds = 10;
 const createError = require("http-errors");
-const Project = require("../models/Project.model.js");
-const Sample=require("../models/Sample.model.js")
 const isLoggedIn = require("../middleware/isLoggedIn.js");
 const bcrypt = require("bcrypt");
 const Message = require("../models/Message.model.js");
 const Chat = require("../models/Chat.model.js");
+const Comment = require("../models/Comment.model")
+const jwt = require("jsonwebtoken");
 
-router.post("/", async (req, res) => {
+// get user info
+router.get("/:username", isLoggedIn, async (req, res, next) => {
   try {
-    const email = req.body.email;
-    console.log(email);
+    const {
+      username
+    } = req.params;
     const userInfo = await User.findOne({
-      email: email
-    }, "-password"); //Exclude password
-    console.log(userInfo)
-    if (!userInfo) throw createError.NotFound();
-    res.status(200).json(userInfo)
+      name: username
+    }, "-password").populate("collabProjects ownProjects samples"); //Exclude password
+    if (!userInfo) {
+      throw createError.NotFound("User Not Found!")
+    }
+    return res.status(200).json(userInfo)
   } catch (err) {
-    console.log(err)
-  }
-});
-
-
-router.get("/addedproject/:id", async (req, res) => {
-  try {
-    const id = req.params.id;
-    const projectInfo = await Project.find({
-      initiator: id
-    });
-    console.log(projectInfo)
-    if (!projectInfo) throw createError.NotFound();
-    res.status(200).json(projectInfo);
-  } catch (err) {
-
+    next(err)
   }
 });
 
 //Router for updating user info
-router.put("/editinfo", async (req, res) => {
+router.put("/editinfo", isLoggedIn, async (req, res, next) => {
   try {
     const {
       name,
@@ -50,37 +38,83 @@ router.put("/editinfo", async (req, res) => {
       aboutMe,
       email
     } = req.body;
-    if (!email) throw createError.NotAcceptable();
-    const userInfo = await User.findOneAndUpdate({
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
+    }
+
+    const nameTaken = await User.findOne({
+      name
+    })
+
+    if (nameTaken) {
+      return res.status(400).json({
+        message: "Username already taken"
+      })
+    }
+
+    await User.findOneAndUpdate({
       email
     }, {
-      name,
+      name: name.toLowerCase(),
       city,
       country,
       aboutMe
     }, {
       new: true
+    }).then((updatedUser) => {
+      if (updatedUser) {
+        const {
+          _id,
+          name,
+          email
+        } = updatedUser;
+
+        // Create an object that will be set as the token payload
+        const payload = {
+          _id,
+          name,
+          email
+        };
+
+        // Create a new JSON Web Token
+        const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
+          algorithm: "HS256",
+          expiresIn: "6h",
+        });
+        console.log("Token?? ", authToken)
+        // Send the token as the response
+        return res.status(200).json({
+          user: updatedUser,
+          authToken: authToken
+        });
+      } else {
+        return res.status(400).json({
+          message: "User not found"
+        })
+      }
     });
-    if (!userInfo) throw createError.NotFound();
-    console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+
   } catch (err) {
-    console.log(err)
-    res.json(err);
+    next(err)
   }
 });
 
 //Router for updating skill update
-router.put("/editskill", async (req, res) => {
+router.put("/editskill", isLoggedIn, async (req, res, next) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -92,27 +126,33 @@ router.put("/editskill", async (req, res) => {
     });
 
     //Add new skill if it doesn't exist in the array (current skillset)
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    return res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    next(err)
   }
 });
 
 
 //Delete skillx
-router.put("/deleteskill", async (req, res) => {
+router.put("/deleteskill", isLoggedIn, async (req, res, next) => {
   try {
     const {
       skill,
       email
     } = req.body;
     console.log(skill, email);
-    if (!email) throw createError.NotAcceptable();
+    if (!email) {
+      return res.status(400).json({
+        message: "Not authorized"
+      })
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -121,135 +161,31 @@ router.put("/deleteskill", async (req, res) => {
       }
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
+    }
     console.log(userInfo);
-    res.status(200).json({
-      message: "Data updated successfulyy!"
-    })
+    return res.status(200).json(userInfo)
   } catch (err) {
     console.log(err)
-    res.json(err);
+    next(err)
   }
 });
 
-//Delete Account from account settting (this router will ne removed to seperate router file)
-router.post("/accountsettings", async (req, res) => {
-  try {
-    const {
-      email,
-      password
-    } = req.body;
-    console.log(email, password);
-    if (!email || !password) throw createError.NotAcceptable();
-    // Check the users collection if a user with the same email exists
-    const foundUser = await User.findOne({
-      email
-    });
-    if (!foundUser) throw createError.NotFound("User not found.")
-
-    // Compare the provided password with the one saved in the database
-    const passwordCorrect = await bcrypt.compare(password, foundUser.password);
-
-    if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
-    console.log(foundUser);
-
-    // get all projects which are going to be deleted; needed to also delete chats
-    const deletedProject = await Project.find({
-      initiator: foundUser._id
-    });
-
-    await Project.deleteMany({initiator: foundUser._id});
-
-    const deletedSample = await Sample.deleteMany({
-      artist: foundUser._id
-    });
-    const deletedProfile = await User.findOneAndDelete({
-      email: email
-    })
-
-    // delete chats of users projects
-    for(const proj of deletedProject){
-      // first store all chats which are about to be deleted:
-      const deletedChat = await Chat.findOne({project: proj._id})
-      
-      // actually delete the chats:
-      await Chat.deleteMany({project: proj._id})
-      
-      // delete all messages of that chat history:
-      await Message.deleteMany({chatId: deletedChat._id})
-    }
-
-    // remove user from own messages, but don't delete them
-    const usersMessages = await Message.updateMany({author: foundUser._id}, {$unset: {author: "", text: "-"}, $pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
-    console.log("Test 1 - ", usersMessages)
-
-    // remove user from other peoples messages
-    const otherPeoplesMessages = await Message.updateMany({$or: [{readBy: {$in: foundUser._id}, sendTo: {$in: foundUser._id}}]}, {$pull: {readBy: foundUser._id, sendTo: foundUser._id}}, {new: true})
-    console.log("Test 2 - ", otherPeoplesMessages)
-
-    res.status(200).json({
-      message: "User is deleted!"
-    });
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-router.put("/accountsettings", async (req, res, next) => {
-  try {
-    const {
-      email,
-      password,
-      changePassword
-    } = req.body;
-
-    console.log(email, password, changePassword);
-
-    if (!email || !password || !changePassword) throw createError.NotAcceptable();
-
-    const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}/;
-
-    if (!passwordRegex.test(changePassword)) throw createError.NotAcceptable({
-      message: "Password must have at least 6 characters and contain at least one number, one lowercase and one uppercase letter."
-    })
-
-    // Check the users collection if a user with the same email exists
-    const foundUser = await User.findOne({
-      email
-    });
-    if (!foundUser) throw createError.NotFound("User not found.")
-
-    // Compare the provided password with the one saved in the database
-    const passwordCorrect = await bcrypt.compare(password, foundUser.password);
-
-    if (!passwordCorrect) throw createError.Unauthorized("Password doesn't match");
-
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedPassword = await bcrypt.hash(changePassword, salt);
-
-    const updatedUser = await User.findOneAndUpdate({
-      email
-    }, {
-      password: hashedPassword
-    });
-    return res.status(200).json({
-      message: "Password is changed!"
-    });
-
-  } catch (err) {
-    console.log(err);
-    next(err);
-  }
-});
-
-router.put("/uploadavatar", async (req, res) => {
+router.put("/uploadavatar", isLoggedIn, async (req, res, next) => {
   try {
     const {
       email,
       avatar,
       cloudinary_id
     } = req.body
-    if (!req.body) throw createError.NotAcceptable();
+    if (!req.body) {
+      return res.status(400).json({
+        message: "No valid input"
+      })
+    }
     const userInfo = await User.findOneAndUpdate({
       email
     }, {
@@ -257,17 +193,19 @@ router.put("/uploadavatar", async (req, res) => {
       cloudinary_id
     });
     //It will delete the skill from the array
-    if (!userInfo) throw createError.NotFound();
+    if (!userInfo) {
+      return res.status(400).json({
+        message: "User not found"
+      })
+    }
     console.log(userInfo);
-    res.status(200).json({
+    return res.status(200).json({
       message: "Data updated successfulyy!"
     })
   } catch (err) {
     console.log(err)
-    res.json(err);
+    next(err)
   }
 });
-
-
 
 module.exports = router;
