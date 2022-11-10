@@ -10,7 +10,7 @@ router.post("/:sampleId", isLoggedIn, async (req, res) => {
     const {title, text} = req.body.form;
 
     if(!text || !title){
-        res.status(400).json({message: "Title and text are required."})
+        return res.status(400).json({message: "Title and text are required."})
     }
 
     // create the feedback:
