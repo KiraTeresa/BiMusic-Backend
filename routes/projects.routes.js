@@ -65,6 +65,14 @@ router.post("/create", isLoggedIn, async (req, res, next) => {
         return;
     }
 
+    // Validation: long description is between 200 and 1000 characters long
+    if(longDescription.length < 200 || longDescription.length > 1000){
+        res.status(400).json({
+            message: "Please provide a description of 200-1000 characters."
+        })
+        return;
+    }
+
     // Validation: at least one skill added
     if (lookingFor.length === 0) {
         res.status(400).json({
