@@ -57,10 +57,26 @@ router.post("/create", isLoggedIn, async (req, res, next) => {
     } = req.body
     const user = Types.ObjectId(req.user)
 
-    // Validation: title, shortDescription and longDescription are provided
-    if (!title || !shortDescription || !longDescription) {
+    // Validation: title, max 50 chars
+    if(!title || title.length > 50){
         res.status(400).json({
-            message: "Please provide a title and description."
+            message: "Please provide a title (max. 50)"
+        })
+        return;
+    }
+
+    // Validation: short description, max 150 chars
+    if(!shortDescription || shortDescription.length > 150){
+        res.status(400).json({
+            message: "Please provide a short description of max 150 characters."
+        })
+        return;
+    }
+
+    // Validation: long description, 200-1000 chars
+    if (!longDescription || longDescription.length < 200 || longDescription.length > 1000) {
+        res.status(400).json({
+            message: "Please provide a meaningful description (200-1000 characters)."
         });
         return;
     }
