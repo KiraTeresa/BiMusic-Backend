@@ -112,7 +112,7 @@ router.post("/create", isLoggedIn, async (req, res) => {
         }
 
         console.log("Successfully added a sample")
-        res.status(200).json("Backend done with adding new sample.")
+        res.status(200).json(newSample._id)
     }).catch((err) => {
         console.log("Something went wrong when adding a new sample.", err)
         res.status(500).json(err)
