@@ -329,9 +329,7 @@ router.post('/:projectId/:userId', isLoggedIn, async (req, res) => {
         projectId,
         userId
     } = req.params;
-    // console.log("-- TRIGGER --")
-    // console.log("PARAM--> ", userId)
-    // console.log("REQ--> ", req.user)
+    const currentUser = req.user
 
     await Project.findById(projectId).then(async (project) => {
         const {
@@ -341,60 +339,83 @@ router.post('/:projectId/:userId', isLoggedIn, async (req, res) => {
         } = project;
 
         // Check if user is initiator:
-        const isInitiator = initiator.equals(userId)
-        console.log("Initiator? ", isInitiator)
+        const isInitiator = initiator.equals(currentUser)
+        // console.log("Initiator? ", isInitiator)
 
         // Check if already collab:
-        const alreadyCollab = collaborators.find((element) => element.equals(userId))
-        console.log("Already? ", alreadyCollab)
+        const alreadyCollab = await Project.findOne({
+            $and: [{
+                _id: Types.ObjectId(projectId)
+            }, {
+                collaborators: {
+                    $in: Types.ObjectId(currentUser)
+                }
+            }]
+        })
+
+        // console.log("Already? ", alreadyCollab)
 
         if (alreadyCollab) {
             // remove user from project
             await Project.findByIdAndUpdate(projectId, {
                 "$pull": {
-                    "collaborators": Types.ObjectId(userId)
+                    "collaborators": Types.ObjectId(currentUser)
                 }
             }, {
                 "new": true
             }).then(() => res.status(200).json("Removed user from project collaborators"))
 
             // remove project from user
-            await User.findByIdAndUpdate(userId, {
+            await User.findByIdAndUpdate(currentUser, {
                 "$pull": {
                     "collabProjects": Types.ObjectId(projectId)
                 }
             }, {
                 "new": true
-            }).then(() => res.status(200).json("Removed from users collabProjects"))
+            }).then(() => {
+                res.status(200).json("Removed from users collabProjects");
+                return
+            })
         }
 
         // Check if already pending:
-        const alreadyPending = await pendingCollabs.find(async (element) => {
-            element.equals(userId)
+        const alreadyPending = await Project.findOne({
+            $and: [{
+                _id: Types.ObjectId(projectId)
+            }, {
+                pendingCollabs: {
+                    $in: Types.ObjectId(currentUser)
+                }
+            }]
         })
-        console.log("Pending? ", alreadyPending)
+
+        // console.log("Pending? ", alreadyPending)
 
         if (alreadyPending) {
             // remove user from pending list
             await Project.findByIdAndUpdate(projectId, {
                 "$pull": {
-                    "pendingCollabs": Types.ObjectId(userId)
+                    "pendingCollabs": Types.ObjectId(currentUser)
                 }
             }, {
                 "new": true
-            }).then(() => res.status(200).json("Removed from pending"))
+            }).then(() => {
+                res.status(200).json("Removed from pending");
+                return
+            })
         }
 
         if (!alreadyCollab && !alreadyPending && !isInitiator) {
             // add user to pending list
             await Project.findByIdAndUpdate(projectId, {
                 "$push": {
-                    "pendingCollabs": Types.ObjectId(userId)
+                    "pendingCollabs": Types.ObjectId(currentUser)
                 }
             }, {
                 "new": true
             }).then(() => {
-                res.status(200).json(`-- Added user to pending list --`)
+                res.status(200).json(`-- Added user to pending list --`);
+                return
             })
         }
     }).catch((err) => {
