@@ -277,7 +277,7 @@ router.put("/", isLoggedIn, async (req, res, next) => {
       password: hashedPassword
     });
     return res.status(200).json({
-      message: "Password is changed!"
+      message: "Password is changed!", user: updatedUser
     });
   } catch (err) {
     console.log(err);
